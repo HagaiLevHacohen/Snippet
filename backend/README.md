@@ -1,0 +1,5 @@
+# Inventory-Application
+Environment Variables:
+DATABASE_URL="postgresql://hagai19:1234@localhost:5432/file_uploader"
+NODE_ENV="development"
+SECRET="cats"
