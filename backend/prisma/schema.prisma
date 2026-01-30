@@ -14,17 +14,87 @@ datasource db {
 }
 
 model User {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
-  posts Post[]
+  id             Int      @id @default(autoincrement())
+  username       String   @unique
+  email          String   @unique
+  name           String
+  status         String?
+  passwordHashed String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  avatarUrl      String?
+
+  following UserFollow[] @relation("Following")
+  followers UserFollow[] @relation("Followers")
+
+  outgoingRequests FollowRequest[] @relation("OutgoingRequests")
+  incomingRequests FollowRequest[] @relation("IncomingRequests")
+
+  posts    Post[]
+  likes    Like[]
+  comments Comment[]
+}
+
+model UserFollow {
+  followerId  Int
+  followingId Int
+
+  follower  User @relation("Following", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("Followers", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@id([followerId, followingId])
+}
+
+model Like {
+  userId Int
+  postId Int
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@id([userId, postId]) // prevents duplicate likes
+}
+
+model FollowRequest {
+  outgoingRequestId Int
+  incomingRequestId Int
+
+  outgoingRequest User @relation("OutgoingRequests", fields: [outgoingRequestId], references: [id], onDelete: Cascade)
+  incomingRequest User @relation("IncomingRequests", fields: [incomingRequestId], references: [id], onDelete: Cascade)
+
+  status FollowRequestStatus @default(PENDING)
+
+  @@id([outgoingRequestId, incomingRequestId])
+}
+
+enum FollowRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
 }
 
 model Post {
-  id        Int     @id @default(autoincrement())
-  title     String
-  content   String?
-  published Boolean @default(false)
-  author    User    @relation(fields: [authorId], references: [id])
-  authorId  Int
+  id        Int      @id @default(autoincrement())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  imageUrl  String?
+
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int
+
+  likes    Like[]
+  comments Comment[]
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  content   String
+  createdAt DateTime @default(now())
+
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int
+
+  post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId Int
 }
