@@ -1,10 +1,9 @@
-class CustomNotFoundError extends Error {
-  constructor(message) {
-    super(message);
-    this.statusCode = 404;
-    // So the error is neat when stringified. NotFoundError: message instead of Error: message
-    this.name = "NotFoundError";
-  }
+function errorHandler(err, req, res, next) {
+  console.error(err);
+
+  res.status(err.status || 500).json({
+    error: err.message || "Internal Server Error",
+  });
 }
 
-module.exports = CustomNotFoundError;
+module.exports = errorHandler;
