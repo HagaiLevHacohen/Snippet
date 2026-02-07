@@ -15,7 +15,7 @@ const indexRouter = require("./routes/indexRouter");
 
 // app setup
 const app = express();
-app.use(cors());
+
 
 
 
@@ -30,6 +30,7 @@ configurePassport(passport, prisma);
 
 
 // ----- Express middleware -----
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(passport.initialize());
