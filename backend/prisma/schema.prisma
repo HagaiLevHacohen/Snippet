@@ -39,8 +39,8 @@ model UserFollow {
   followerId  Int
   followingId Int
 
-  follower  User @relation("Following", fields: [followerId], references: [id], onDelete: Cascade)
-  following User @relation("Followers", fields: [followingId], references: [id], onDelete: Cascade)
+  follower  User @relation("Following", fields: [followerId], references: [id], onDelete: Cascade) // who started it
+  following User @relation("Followers", fields: [followingId], references: [id], onDelete: Cascade) // who receives it
 
   @@id([followerId, followingId])
 }

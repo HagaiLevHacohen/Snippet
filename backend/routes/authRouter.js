@@ -4,7 +4,7 @@ const { postLogin, postSignup, validateUser, getUser} = require('../controllers/
 
 const authRouter = Router();
 
-// Routes: /auth/
+// Routes: /auth
 authRouter.post("/signup", validateUser, postSignup);
 authRouter.post("/login", postLogin);
 authRouter.post("/me", getUser);

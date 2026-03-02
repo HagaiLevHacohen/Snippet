@@ -35,7 +35,10 @@ const validateUser = [
   body("name")
     .trim()
     .notEmpty()
-    .withMessage("Name is required"),
+    .withMessage("Name is required")
+    .isLength({ min: 1, max: 50 })
+    .withMessage("Name must be between 1 and 50 characters"),
+    
 
   body("password")
     .isLength({ min: 6 })

@@ -12,6 +12,7 @@ const cors = require('cors');
 // Import Routers
 const indexRouter = require("./routes/indexRouter");
 const authRouter = require("./routes/authRouter");
+const usersRouter = require("./routes/usersRouter");
 
 
 // app setup
@@ -40,6 +41,8 @@ app.use(passport.initialize());
 // ------- Routers -------
 app.use("/", indexRouter);
 app.use("/auth", authRouter);
+app.use("/users", usersRouter);
+
 
 // ------- Error handler -------
 app.use(errorHandler);

@@ -4,7 +4,7 @@ const { getIndex } = require('../controllers/indexController');
 
 const indexRouter = Router();
 
-// Routes
+// Routes: /
 indexRouter.get("/", getIndex);
 
 
