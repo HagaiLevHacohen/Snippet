@@ -14,6 +14,7 @@ const indexRouter = require("./routes/indexRouter");
 const authRouter = require("./routes/authRouter");
 const usersRouter = require("./routes/usersRouter");
 const postsRouter = require("./routes/postsRouter");
+const likesRouter = require("./routes/likesRouter");
 
 
 // app setup
@@ -44,6 +45,7 @@ app.use("/", indexRouter);
 app.use("/auth", authRouter);
 app.use("/users", usersRouter);
 app.use("/posts", postsRouter);
+app.use("/posts/:id/like", postsRouter);
 
 
 

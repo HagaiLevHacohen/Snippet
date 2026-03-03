@@ -1,4 +1,4 @@
-// controllers/usersController.js
+// controllers/postsController.js
 
 const { body, validationResult, matchedData } = require("express-validator");
 const { prisma } = require("../lib/prisma");
