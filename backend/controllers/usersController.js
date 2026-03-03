@@ -140,7 +140,7 @@ const updateUser = async (req, res, next) => {
       });
     }
 
-    const validatedData = matchedData(req, { includeOptionals: true });
+    const validatedData = matchedData(req);
 
     const updatedUser = await prisma.user.update({
       where: { id: userId },

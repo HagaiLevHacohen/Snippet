@@ -13,6 +13,7 @@ const cors = require('cors');
 const indexRouter = require("./routes/indexRouter");
 const authRouter = require("./routes/authRouter");
 const usersRouter = require("./routes/usersRouter");
+const postsRouter = require("./routes/postsRouter");
 
 
 // app setup
@@ -42,6 +43,8 @@ app.use(passport.initialize());
 app.use("/", indexRouter);
 app.use("/auth", authRouter);
 app.use("/users", usersRouter);
+app.use("/posts", postsRouter);
+
 
 
 // ------- Error handler -------
