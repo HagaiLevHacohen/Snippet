@@ -154,6 +154,51 @@ const deletePost = async (req, res, next) => {
 };
 
 
+validateComment = [
+  body("content")
+    .trim()
+    .isLength({ min: 1, max: 500 })
+    .withMessage("Content must not be empty, and must be at most 500 characters"),
+]
+
+const createComment = async (req, res, next) => {
+  try {
+    const postId = Number(req.params.id);
+    if (isNaN(postId)) {
+      return res.status(400).json({ error: "Invalid post id" });
+    }
+
+    const postExists = await prisma.post.findUnique({
+      where: { id: postId }
+    });
+
+    if (!postExists) {
+      return res.status(404).json({ error: "Post not found" });
+    }
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        errors: errors.array(),
+      });
+    }
+
+    const {content} = matchedData(req);
+
+    const comment = await prisma.comment.create({
+    data: {
+        content: content,
+        userId: req.userId,
+        postId: postId
+    },
+    })
+
+    res.status(201).json(comment);
+    } catch (err) {
+        next(err);
+    }
+};
 
 
-module.exports = { getPosts, getPost, validatePost, createPost, deletePost};
+module.exports = { getPosts, getPost, validatePost, createPost, deletePost, validateComment, createComment};
