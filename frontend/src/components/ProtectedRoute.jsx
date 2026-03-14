@@ -1,7 +1,7 @@
 import { Navigate } from "react-router";
 import { useAuth } from "./context/AuthContext";
 
-export function ProtectedRoute({ children }) {
+function ProtectedRoute({ children }) {
   const { isLoggedIn } = useAuth(); // check auth state
 
   if (!isLoggedIn) {
@@ -10,3 +10,5 @@ export function ProtectedRoute({ children }) {
 
   return children; // render the protected component if logged in
 }
+
+export default ProtectedRoute

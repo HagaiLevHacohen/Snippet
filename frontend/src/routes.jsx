@@ -1,8 +1,13 @@
 import App from "./components/App.jsx";
 import ErrorPage from "./components/ErrorPage.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import Home from "./components/Home.jsx";
 import Login from "./components/Login.jsx";
 import Signup from "./components/Signup.jsx";
+import Feed from "./components/Feed.jsx";
+import Explore from "./components/Explore.jsx";
+import Search from "./components/Search.jsx";
+import Profile from "./components/Profile.jsx";
 
 const routes = [
   { path: "/", element: <Home /> },
