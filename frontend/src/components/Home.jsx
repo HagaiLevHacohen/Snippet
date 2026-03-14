@@ -1,19 +1,34 @@
-import { useState } from "react"
+import { Link, useNavigate } from "react-router";
+import { useAuth } from "./context/AuthContext";
+import DisplaySnippet from "./DisplaySnippet";
+import profile1 from "../assets/fake_profile_1.jpg";
+import profile2 from "../assets/fake_profile_2.jpg";
+import profile3 from "../assets/fake_profile_3.jpg";
+import profile4 from "../assets/fake_profile_4.jpg";
 
 function Home() {
-  const [count, setCount] = useState(0)
+  const navigate = useNavigate();
+  const { isLoggedIn } = useAuth(); // check auth state
+
+  if (isLoggedIn) {
+    return <Navigate to="/feed" />; // redirect if logged in
+  }
+
+  const handleSignup = () => {
+    navigate("/signup");
+  };
+  
+  const handleLogin = () => {
+    navigate("/login");
+  };
 
   return (
     <div className="font-['Montserrat',sans-serif] h-screen flex text-white bg-linear-to-br from-slate-950 via-indigo-950 to-black">
 
       {/* Left column */}
-      <div className="flex-1 flex flex-col justify-center items-center text-center px-10 space-y-6">
-        <p className="text-lg text-gray-300">
-          The best way to learn programming is still: build something slightly too hard for you.
-        </p>
-        <p className="text-lg text-gray-300">
-          Every successful startup started with someone saying “this might be stupid but…”
-        </p>
+      <div className="flex-1 flex flex-col justify-center items-center text-center px-10 space-y-30">
+        <DisplaySnippet profilePic={profile1} text="The best way to learn programming is still: build something slightly too hard for you." likes={189} />
+        <DisplaySnippet profilePic={profile2} text="Most people underestimate how much progress they can make in one year." likes={5} />
       </div>
 
       {/* Center column */}
@@ -26,25 +41,20 @@ function Home() {
           Post short snippets, follow interesting people, and explore trending conversations from around the world.
         </p>
         <div className="flex gap-8 mt-4">
-          <button className="px-6 py-3 rounded-lg font-medium text-white bg-linear-to-r from-purple-600 via-purple-700 to-purple-800 hover:scale-110 transition">
+          <button onClick={handleSignup} className="px-6 py-3 rounded-lg font-medium text-white bg-linear-to-r from-purple-600 via-purple-700 to-purple-800 hover:scale-110 transition">
             Sign Up
           </button>
-          <button className="px-6 py-3 border border-gray-400 hover:bg-white hover:text-black rounded-lg font-medium hover:scale-110 transition">
+          <button onClick={handleLogin} className="px-6 py-3 border border-gray-400 hover:bg-white hover:text-black rounded-lg font-medium hover:scale-110 transition">
             Log In
           </button>
         </div>
       </div>
 
       {/* Right column */}
-      <div className="flex-1 flex flex-col justify-center items-center text-center px-10 space-y-6">
-        <p className="text-lg text-gray-300">
-          The best way to learn programming is still: build something slightly too hard for you.
-        </p>
-        <p className="text-lg text-gray-300">
-          Every successful startup started with someone saying “this might be stupid but…”
-        </p>
+      <div className="flex-1 flex flex-col justify-center items-center text-center px-10 space-y-30">
+        <DisplaySnippet profilePic={profile3} text="What's a game you wish you could experience for the first time again?" likes={39} />
+        <DisplaySnippet profilePic={profile4} text="Why do I open the fridge 10 times like something new will appear" likes={15} />
       </div>
-
     </div>
   )
 }
