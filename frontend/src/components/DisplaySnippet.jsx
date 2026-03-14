@@ -1,7 +1,9 @@
 
 
 function DisplaySnippet({ 
-  profilePic, 
+  profilePic,
+  name,
+  username,
   text, 
   time = "2h ago", 
   likes = 0 
@@ -16,7 +18,8 @@ function DisplaySnippet({
           alt="Profile" 
           className="w-10 h-10 rounded-full object-cover border border-gray-600"
         />
-        <span className="text-gray-400 text-sm">{time}</span>
+        <span className="text-white">{name}</span>
+        <span className="text-gray-400 text-sm">@{username} • {time}</span>
       </div>
 
       {/* Snippet text */}

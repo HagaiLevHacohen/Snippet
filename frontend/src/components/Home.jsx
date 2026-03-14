@@ -27,8 +27,8 @@ function Home() {
 
       {/* Left column */}
       <div className="flex-1 flex flex-col justify-center items-center text-center px-10 space-y-30">
-        <DisplaySnippet profilePic={profile1} text="The best way to learn programming is still: build something slightly too hard for you." likes={189} />
-        <DisplaySnippet profilePic={profile2} text="Most people underestimate how much progress they can make in one year." likes={5} />
+        <DisplaySnippet profilePic={profile1} name="Alice Johnson" username="alicej17" text="The best way to learn programming is still: build something slightly too hard for you." likes={189} />
+        <DisplaySnippet profilePic={profile2} name="Bob Smith" username="bobsmith" text="Most people underestimate how much progress they can make in one year." likes={5} />
       </div>
 
       {/* Center column */}
@@ -52,8 +52,8 @@ function Home() {
 
       {/* Right column */}
       <div className="flex-1 flex flex-col justify-center items-center text-center px-10 space-y-30">
-        <DisplaySnippet profilePic={profile3} text="What's a game you wish you could experience for the first time again?" likes={39} />
-        <DisplaySnippet profilePic={profile4} text="Why do I open the fridge 10 times like something new will appear" likes={15} />
+        <DisplaySnippet profilePic={profile3} name="Charlie Brown" username="charlieb9" text="What's a game you wish you could experience for the first time again?" likes={39} />
+        <DisplaySnippet profilePic={profile4} name="Diana Prince" username="dianap" text="Why do I open the fridge 10 times like something new will appear" likes={15} />
       </div>
     </div>
   )
