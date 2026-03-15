@@ -23,7 +23,7 @@ function Home() {
   };
 
   return (
-    <div className="font-['Montserrat',sans-serif] h-screen flex text-white bg-linear-to-br from-slate-950 via-indigo-950 to-black">
+    <div className="font-['Montserrat',sans-serif] min-h-screen flex text-white bg-linear-to-br from-slate-950 via-indigo-950 to-black">
 
       {/* Left column */}
       <div className="flex-1 flex flex-col justify-center items-center text-center px-10 space-y-30">
@@ -41,12 +41,14 @@ function Home() {
           Post short snippets, follow interesting people, and explore trending conversations from around the world.
         </p>
         <div className="flex gap-8 mt-4">
-          <button onClick={handleSignup} className="px-6 py-3 rounded-lg font-medium text-white bg-linear-to-r from-purple-600 via-purple-700 to-purple-800 hover:scale-110 transition">
-            Sign Up
-          </button>
-          <button onClick={handleLogin} className="px-6 py-3 border border-gray-400 hover:bg-white hover:text-black rounded-lg font-medium hover:scale-110 transition">
-            Log In
-          </button>
+
+        <Link to="/signup" className="px-6 py-3 rounded-lg font-medium text-white bg-linear-to-r from-purple-600 via-purple-700 to-purple-800 hover:scale-110 transition">
+          Sign Up
+        </Link>
+        <Link to="/login" className="px-6 py-3 border border-gray-400 hover:bg-white hover:text-black rounded-lg font-medium hover:scale-110 transition">
+          Log In
+        </Link>
+        
         </div>
       </div>
 

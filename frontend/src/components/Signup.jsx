@@ -1,11 +1,164 @@
 import { useState } from 'react'
+import FormInput from './FormInput';
+import {Link} from 'react-router-dom';
+import { apiFetch } from "../api";
+import toast from 'react-hot-toast';
 
 function Signup() {
-  const [count, setCount] = useState(0)
+  const [form, setForm] = useState({
+    username: "",
+    email: "",
+    name: "",
+    password: "",
+    confirm_password: ""
+  });
+
+  const [errors, setErrors] = useState({});
+
+  const handleChange = (e) => {
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    // Trim values for validation
+    const name = form.name.trim();
+    const username = form.username.trim();
+    const email = form.email.trim();
+    const password = form.password;
+    const confirmPassword = form.confirm_password;
+
+    // Name
+    if (!name) newErrors.name = "Name is required";
+    else if (name.length > 50) newErrors.name = "Name must be at most 50 characters";
+
+    // Username
+    if (!username) newErrors.username = "Username is required";
+    else if (username.length > 20) newErrors.username = "Username must be at most 20 characters";
+
+    // Email
+    if (!email) newErrors.email = "Email is required";
+    else if (!/^\S+@\S+\.\S+$/.test(email)) newErrors.email = "Email is invalid";
+
+    // Password
+    if (!password) newErrors.password = "Password is required";
+    else if (password.length < 6) newErrors.password = "Password must be at least 6 characters";
+    else if (!/[A-Z]/.test(password)) newErrors.password = "Password must contain an uppercase letter";
+    else if (!/[a-z]/.test(password)) newErrors.password = "Password must contain a lowercase letter";
+    else if (!/[0-9]/.test(password)) newErrors.password = "Password must contain a number";
+    else if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) newErrors.password = "Password must contain a special character";
+
+    // Confirm Password
+    if (confirmPassword !== password) newErrors.confirm_password = "Passwords do not match";
+
+    return newErrors;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const validationErrors = validateForm();
+    setErrors(validationErrors);
+
+    if (Object.keys(validationErrors).length === 0) {
+      try {
+        const response = await apiFetch("/auth/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        });
+        const data = await response.json(); 
+
+        if (!response.ok) {
+          if (data.errors) {
+            const apiErrors = {};
+            data.errors.forEach(err => {
+              apiErrors[err.path] = err.msg;
+            });
+            setErrors(apiErrors);
+          } else {
+            toast.error(data.message || `Error: ${response.status}`);
+          }
+          return;
+        }
+        toast.success("Signup successful!");
+      } catch (err) {
+        toast.error("Network error. Please try again.");
+      }
+    }
+  };
 
   return (
-    <>
-    </>
+    <div className="font-['Montserrat',sans-serif] min-h-screen flex justify-center  items-start pt-32 text-white bg-linear-to-br from-slate-950 via-indigo-950 to-black">
+      <Link to="/" className="absolute top-6 left-6 text-2xl hover:scale-105 text-purple-400 hover:text-purple-300 font-semibold">
+        ← Home
+      </Link>
+      <div className='bg-gray-800 border rounded-md border-gray-700 py-4 px-12'>
+        <h1 className='text-center font-bold text-3xl mb-8'>Sign Up</h1>
+        <form onSubmit={handleSubmit} className='flex flex-col gap-10'>
+          <FormInput
+            label="Name"
+            name="name"
+            value={form.name}
+            onChange={handleChange}
+            placeholder="Enter your name"
+            required
+          />
+
+          <FormInput
+            label="Username"
+            name="username"
+            value={form.username}
+            onChange={handleChange}
+            placeholder="Enter your username"
+            required
+          />
+
+          <FormInput
+            label="Email"
+            name="email"
+            type="email"
+            value={form.email}
+            onChange={handleChange}
+            placeholder="Enter your email"
+            required
+          />
+
+          <FormInput
+            label="Password"
+            name="password"
+            type="password"
+            value={form.password}
+            onChange={handleChange}
+            placeholder="Enter your password"
+            required
+          />
+
+          <FormInput
+            label="Confirm Password"
+            name="confirm_password"
+            type="password"
+            value={form.confirm_password}
+            onChange={handleChange}
+            placeholder="Confirm your password"
+            required
+          />
+          <div>
+            {Object.values(errors).map((error, index) => (
+              <p key={index} className="text-red-500 text-sm font-bold">• {error}</p>
+            ))}
+          </div>
+          <button type="submit" className="bg-linear-to-r from-purple-600 via-purple-700 to-purple-800 hover:scale-110 rounded-lg py-2 font-semibold transition-all">
+            Sign Up
+          </button>
+        </form>
+        <p className='mt-2 text-center'>Already have an account? <Link to="/login" className="text-purple-500 hover:text-purple-400">Login</Link></p>
+      </div>
+    </div>
   )
 }
 
