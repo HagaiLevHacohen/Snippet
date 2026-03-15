@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router";
+import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import DisplaySnippet from "./DisplaySnippet";
 import profile1 from "../assets/fake_profile_1.jpg";
