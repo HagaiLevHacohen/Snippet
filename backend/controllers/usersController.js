@@ -2,6 +2,7 @@
 
 const { body, validationResult, matchedData } = require("express-validator");
 const { prisma } = require("../lib/prisma");
+const { sendSuccess, sendError } = require("../utils/response");
 
 
 
@@ -10,7 +11,7 @@ const getUserById = async (req, res, next) => {
     const userId = Number(req.params.id);
 
     if (isNaN(userId)) {
-      return res.status(400).json({ error: "Invalid user id" });
+      return sendError(res, "Invalid user id", 400);
     }
 
     const user = await prisma.user.findUnique({
@@ -34,10 +35,10 @@ const getUserById = async (req, res, next) => {
     })
 
     if (!user) {
-      return res.status(404).json({ error: "User not found" });
+      return sendError(res, "User not found", 404);
     }
 
-    res.json(user);
+    return sendSuccess(res, user, "User retrieved successfully");
   } catch (err) {
     next(err);
   }
@@ -49,7 +50,7 @@ const getFollowers = async (req, res, next) => {
     const userId = Number(req.params.id);
 
     if (isNaN(userId)) {
-      return res.status(400).json({ error: "Invalid user id" });
+      return sendError(res, "Invalid user id", 400);
     }
     
     const followers = await prisma.userFollow.findMany({
@@ -66,7 +67,10 @@ const getFollowers = async (req, res, next) => {
       }
     });
 
-    res.json(followers.map(f => f.follower));
+    // Extract follower objects and send in standardized format
+    const followerData = followers.map(f => f.follower);
+
+    return sendSuccess(res, followerData, "Followers retrieved successfully");
   } catch (err) {
     next(err);
   }
@@ -78,7 +82,7 @@ const getFollowing = async (req, res, next) => {
     const userId = Number(req.params.id);
 
     if (isNaN(userId)) {
-      return res.status(400).json({ error: "Invalid user id" });
+      return sendError(res, "Invalid user id", 400);
     }
     
     const following = await prisma.userFollow.findMany({
@@ -95,7 +99,9 @@ const getFollowing = async (req, res, next) => {
       }
     });
 
-    res.json(following.map(f => f.following));
+    const followingData = following.map(f => f.following);
+    return sendSuccess(res, followingData, "Following retrieved successfully");
+
   } catch (err) {
     next(err);
   }
@@ -125,19 +131,16 @@ const updateUser = async (req, res, next) => {
     const userId = Number(req.params.id);
 
     if (isNaN(userId)) {
-      return res.status(400).json({ error: "Invalid user id" });
+      return sendError(res, "Invalid user id", 400);
     }
 
     if (req.userId !== userId) {
-      return res.status(403).json({ error: "Forbidden" });
+      return sendError(res, "Forbidden", 403);
     }
 
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({
-        success: false,
-        errors: errors.array(),
-      });
+      return sendError(res, "Validation failed", 400, errors.array());
     }
 
     const validatedData = matchedData(req);
@@ -163,7 +166,7 @@ const updateUser = async (req, res, next) => {
       }
     });
 
-    res.json(updatedUser);
+    return sendSuccess(res, updatedUser, "User updated successfully");
   } catch (err) {
     next(err);
   }

@@ -2,6 +2,7 @@
 
 const { body, validationResult, matchedData } = require("express-validator");
 const { prisma } = require("../lib/prisma");
+const { sendSuccess, sendError } = require("../utils/response");
 
 
 
@@ -43,7 +44,8 @@ const getPosts = async (req, res, next) => {
     },
     });
 
-    res.json(posts);
+    sendSuccess(res, posts, "Posts retrieved successfully");
+
     } catch (err) {
         next(err);
     }
@@ -55,7 +57,7 @@ const getPost = async (req, res, next) => {
     const postId = Number(req.params.id);
 
     if (isNaN(postId)) {
-      return res.status(400).json({ error: "Invalid post id" });
+      return sendError(res, "Invalid post id", 400);
     }
     const post = await prisma.post.findUnique({
     where: { id: postId },
@@ -75,11 +77,10 @@ const getPost = async (req, res, next) => {
     },
     });
 
-    if (!post) {
-        return res.status(404).json({ error: "Post not found" });
-    }
+    if (!post) return sendError(res, "Post not found", 404);
 
-    res.json(post);
+    sendSuccess(res, post, "Post retrieved successfully");
+
     } catch (err) {
         next(err);
     }
@@ -106,15 +107,12 @@ const createPost = async (req, res, next) => {
 
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({
-        success: false,
-        errors: errors.array(),
-      });
+      return sendError(res, "Validation failed", 400, errors.array());
     }
 
     const validatedData = matchedData(req, { includeOptionals: true });
     if (!validatedData.content && !validatedData.imageUrl) {
-      return res.status(400).json({ error: "Post must have either content or image" });
+      return sendError(res, "Post must have either content or image", 400);
     }
 
     const post = await prisma.post.create({
@@ -124,7 +122,8 @@ const createPost = async (req, res, next) => {
     },
     })
 
-    res.status(201).json(post);
+    sendSuccess(res, post, "Post created successfully", 201);
+    
     } catch (err) {
         next(err);
     }
@@ -134,19 +133,19 @@ const deletePost = async (req, res, next) => {
   try {
     const postId = Number(req.params.id);
     if (isNaN(postId)) {
-      return res.status(400).json({ error: "Invalid post id" });
+      return sendError(res, "Invalid post id", 400);
     }
 
     // Fetch the post first
     const post = await prisma.post.findUnique({ where: { id: postId } });
-    if (!post) return res.status(404).json({ error: "Post not found" });
+    if (!post) return sendError(res, "Post not found", 404);
 
     // Check if the user owns the post
-    if (post.userId !== req.userId) return res.status(403).json({ error: "Forbidden" });
+    if (post.userId !== req.userId) return sendError(res, "Forbidden", 403);
 
     // Delete
     const deletedPost = await prisma.post.delete({ where: { id: postId } });
-    res.status(200).json(deletedPost);
+    sendSuccess(res, deletedPost, "Post deleted successfully");
 
   } catch (err) {
     next(err);
@@ -154,7 +153,7 @@ const deletePost = async (req, res, next) => {
 };
 
 
-validateComment = [
+const validateComment = [
   body("content")
     .trim()
     .isLength({ min: 1, max: 500 })
@@ -165,24 +164,19 @@ const createComment = async (req, res, next) => {
   try {
     const postId = Number(req.params.id);
     if (isNaN(postId)) {
-      return res.status(400).json({ error: "Invalid post id" });
+      return sendError(res, "Invalid post id", 400);
     }
 
-    const postExists = await prisma.post.findUnique({
-      where: { id: postId }
-    });
+    // Check if the post exists
+    const postExists = await prisma.post.findUnique({ where: { id: postId } });
+    if (!postExists) return sendError(res, "Post not found", 404);
 
-    if (!postExists) {
-      return res.status(404).json({ error: "Post not found" });
-    }
-
+    // Validate request
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({
-        success: false,
-        errors: errors.array(),
-      });
+      return sendError(res, "Validation failed", 400, errors.array());
     }
+
 
     const {content} = matchedData(req);
 
@@ -194,7 +188,8 @@ const createComment = async (req, res, next) => {
     },
     })
 
-    res.status(201).json(comment);
+    sendSuccess(res, comment, "Comment created successfully", 201);
+
     } catch (err) {
         next(err);
     }

@@ -1,22 +1,27 @@
 // controllers/likesController.js
 
-const { body, validationResult, matchedData } = require("express-validator");
 const { prisma } = require("../lib/prisma");
+const { sendSuccess, sendError } = require("../utils/response");
 
 
 const postLike = async (req, res, next) => {
   try {
     const postId = Number(req.params.id);
     if (isNaN(postId)) {
-      return res.status(400).json({ error: "Invalid post id" });
+      return sendError(res, "Invalid post id", 400);
     }
-    // Fetch the post first
+
+    // Check if the post exists
     const post = await prisma.post.findUnique({ where: { id: postId } });
-    if (!post) return res.status(404).json({ error: "Post not found" });
+    if (!post) return sendError(res, "Post not found", 404);
 
-    const like = await prisma.like.create({ data: { userId: req.userId, postId: postId} });
+    // Create a like
+    const like = await prisma.like.create({
+      data: { userId: req.userId, postId: postId },
+    });
 
-    res.status(201).json(like);
+    sendSuccess(res, like, "Post liked successfully", 201);
+
     } catch (err) {
         next(err);
     }
@@ -26,26 +31,28 @@ const deleteLike = async (req, res, next) => {
   try {
     const postId = Number(req.params.id);
     if (isNaN(postId)) {
-      return res.status(400).json({ error: "Invalid post id" });
+      return sendError(res, "Invalid post id", 400);
     }
 
-    // Fetch the post first
+    // Check if the post exists
     const post = await prisma.post.findUnique({ where: { id: postId } });
-    if (!post) return res.status(404).json({ error: "Post not found" });
+    if (!post) return sendError(res, "Post not found", 404);
 
 
-    // Delete
+
+    // Delete the like
     const deletedLike = await prisma.like.delete({
-    where: {
-        userId_postId: {
-        userId: req.userId,
-        postId: postId,
-        },
-    },
+      where: { userId_postId: { userId: req.userId, postId: postId } },
     });
-    res.status(200).json(deletedLike);
+
+
+    return sendSuccess(res, deletedLike, "Like removed successfully");
 
   } catch (err) {
+    if (err.code === "P2025") {
+      // Like not found
+      return sendError(res, "Like not found", 404);
+    }
     next(err);
   }
 };

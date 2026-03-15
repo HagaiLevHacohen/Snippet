@@ -1,7 +1,8 @@
 // controllers/followController.js
 
-const { body, validationResult, matchedData } = require("express-validator");
 const { prisma } = require("../lib/prisma");
+const { sendSuccess, sendError } = require("../utils/response");
+
 
 
 const createRequest = async (req, res, next) => {
@@ -9,21 +10,16 @@ const createRequest = async (req, res, next) => {
     const receiverId = Number(req.params.id);
 
     if (isNaN(receiverId)) {
-      return res.status(400).json({ error: "Invalid receiver id" });
+      return sendError(res, "Invalid receiver id", 400);
     }
 
     if (receiverId === req.userId) {
-      return res.status(400).json({ error: "You cannot follow yourself" });
+      return sendError(res, "You cannot follow yourself", 400);
     }
 
-    // Check user exists
-    const user = await prisma.user.findUnique({
-      where: { id: receiverId },
-    });
-
-    if (!user) {
-      return res.status(404).json({ error: "Receiver not found" });
-    }
+    // Check if the receiver exists
+    const user = await prisma.user.findUnique({ where: { id: receiverId } });
+    if (!user) return sendError(res, "Receiver not found", 404);
 
     // Already following?
     const existingFollow = await prisma.userFollow.findUnique({
@@ -35,9 +31,7 @@ const createRequest = async (req, res, next) => {
       },
     });
 
-    if (existingFollow) {
-      return res.status(400).json({ error: "Already following this user" });
-    }
+    if (existingFollow) return sendError(res, "Already following this user", 400);
 
     const existingRequest = await prisma.followRequest.findUnique({
       where: {
@@ -48,9 +42,8 @@ const createRequest = async (req, res, next) => {
       },
     });
 
-    if (existingRequest) {
-      return res.status(400).json({ error: "Follow request already exists" });
-    }
+    if (existingRequest) return sendError(res, "Follow request already exists", 400);
+
 
     // Create request
     const request = await prisma.followRequest.create({
@@ -60,12 +53,12 @@ const createRequest = async (req, res, next) => {
       },
     });
 
-    res.status(201).json(request);
+    sendSuccess(res, request, "Follow request created successfully", 201);
 
   } catch (err) {
     if (err.code === "P2002") {
       // Catch duplicate request (composite key violation)
-      return res.status(400).json({ error: "Follow request already sent" });
+      return sendError(res, "Follow request already sent", 400);
     }
     next(err);
   }
@@ -77,17 +70,16 @@ const acceptRequest = async (req, res, next) => {
     const senderId = Number(req.params.id); // user who sent request
 
     if (isNaN(senderId)) {
-      return res.status(400).json({ error: "Invalid sender id" });
+      return sendError(res, "Invalid sender id", 400);
     }
 
+    // Check if sender exists
     const sender = await prisma.user.findUnique({
       where: { id: senderId },
     });
+    if (!sender) return sendError(res, "Sender not found", 404);
 
-    if (!sender) {
-      return res.status(404).json({ error: "Sender not found" });
-    }
-
+    // Check if the follow request exists
     const followRequest = await prisma.followRequest.findUnique({
       where: {
         outgoingRequestId_incomingRequestId: {
@@ -96,10 +88,8 @@ const acceptRequest = async (req, res, next) => {
         },
       },
     });
+    if (!followRequest) return sendError(res, "Follow request doesn't exist", 400);
 
-    if (!followRequest) {
-      return res.status(400).json({ error: "Follow request doesn't exist" });
-    }
 
     const [, follow] = await prisma.$transaction([
       prisma.followRequest.delete({
@@ -118,7 +108,7 @@ const acceptRequest = async (req, res, next) => {
       }),
     ]);
 
-    res.status(201).json(follow);
+    sendSuccess(res, follow, "Follow request accepted successfully", 201);
   } catch (err) {
     next(err);
   }
@@ -129,17 +119,16 @@ const rejectRequest = async (req, res, next) => {
     const senderId = Number(req.params.id); // user who sent request
 
     if (isNaN(senderId)) {
-      return res.status(400).json({ error: "Invalid sender id" });
+      return sendError(res, "Invalid sender id", 400);
     }
 
+    // Check if sender exists
     const sender = await prisma.user.findUnique({
       where: { id: senderId },
     });
+    if (!sender) return sendError(res, "Sender not found", 404);
 
-    if (!sender) {
-      return res.status(404).json({ error: "Sender not found" });
-    }
-
+    // Check if follow request exists
     const followRequest = await prisma.followRequest.findUnique({
       where: {
         outgoingRequestId_incomingRequestId: {
@@ -148,12 +137,10 @@ const rejectRequest = async (req, res, next) => {
         },
       },
     });
+    if (!followRequest) return sendError(res, "Follow request doesn't exist", 400);
 
-    if (!followRequest) {
-      return res.status(400).json({ error: "Follow request doesn't exist" });
-    }
 
-    const deletedRequest = await prisma.followRequest.update({
+    const rejectedRequest = await prisma.followRequest.update({
       where: {
         outgoingRequestId_incomingRequestId: {
           outgoingRequestId: senderId,
@@ -165,7 +152,8 @@ const rejectRequest = async (req, res, next) => {
       }
     })
 
-    res.status(200).json(deletedRequest);
+    sendSuccess(res, rejectedRequest, "Follow request rejected successfully");
+    
   } catch (err) {
     next(err);
   }
@@ -177,10 +165,10 @@ const deleteFollow = async (req, res, next) => {
   try {
     const receiverId = Number(req.params.id);
     if (isNaN(receiverId)) {
-      return res.status(400).json({ error: "Invalid receiver id" });
+      return sendError(res, "Invalid receiver id", 400);
     }
 
-    // Delete
+    // Delete the follow relationship
     const deletedFollow = await prisma.userFollow.delete({
       where: {
         followerId_followingId: {
@@ -189,13 +177,15 @@ const deleteFollow = async (req, res, next) => {
         },
       },
     });
-    res.status(200).json(deletedFollow);
+
+    sendSuccess(res, deletedFollow, "Follow deleted successfully");
 
   } catch (err) {
     if (err.code === "P2025") {
-    return res.status(404).json({ error: "Follow not found" });
+      // Follow not found
+      return sendError(res, "Follow not found", 404);
     }
-    next(err);
+    next(err); // forward unexpected errors to global handler
   }
 };
 

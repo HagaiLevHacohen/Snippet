@@ -2,13 +2,15 @@
 
 const { body, validationResult, matchedData } = require("express-validator");
 const { prisma } = require("../lib/prisma");
+const { sendSuccess, sendError } = require("../utils/response");
+
 
 const getComment = async (req, res, next) => {
   try {
     const commentId = Number(req.params.id);
 
     if (isNaN(commentId)) {
-      return res.status(400).json({ error: "Invalid comment id" });
+      return sendError(res, "Invalid comment id", 400);
     }
     const comment = await prisma.comment.findUnique({
       where: { id: commentId },
@@ -20,10 +22,11 @@ const getComment = async (req, res, next) => {
     });
 
     if (!comment) {
-        return res.status(404).json({ error: "Comment not found" });
+        return sendError(res, "Comment not found", 404);
     }
 
-    res.json(comment);
+    sendSuccess(res, comment, "Comment retrieved successfully");
+
     } catch (err) {
         next(err);
     }
@@ -42,23 +45,19 @@ const updateComment = async (req, res, next) => {
     const commentId = Number(req.params.id);
 
     if (isNaN(commentId)) {
-      return res.status(400).json({ error: "Invalid comment id" });
+      return sendError(res, "Invalid comment id", 400);
     }
 
     // Fetch the comment first
     const comment = await prisma.comment.findUnique({ where: { id: commentId } });
-    if (!comment) return res.status(404).json({ error: "Comment not found" });
+    if (!comment) return sendError(res, "Comment not found", 404);
 
     // Check if the user owns the comment
-    if (comment.userId !== req.userId) return res.status(403).json({ error: "Forbidden" });
-
+    if (comment.userId !== req.userId) return sendError(res, "Forbidden", 403);
 
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({
-        success: false,
-        errors: errors.array(),
-      });
+      return sendError(res, "Validation failed", 400, errors.array());
     }
 
     const validatedData = matchedData(req);
@@ -73,7 +72,8 @@ const updateComment = async (req, res, next) => {
       },
     });
 
-    res.json(updatedComment);
+    sendSuccess(res, updatedComment, "Comment updated successfully");
+
   } catch (err) {
     next(err);
   }
@@ -84,19 +84,19 @@ const deleteComment = async (req, res, next) => {
   try {
     const commentId = Number(req.params.id);
     if (isNaN(commentId)) {
-      return res.status(400).json({ error: "Invalid comment id" });
+      return sendError(res, "Invalid comment id", 400);
     }
 
     // Fetch the comment first
     const comment = await prisma.comment.findUnique({ where: { id: commentId } });
-    if (!comment) return res.status(404).json({ error: "Comment not found" });
+    if (!comment) return sendError(res, "Comment not found", 404);
 
     // Check if the user owns the comment
-    if (comment.userId !== req.userId) return res.status(403).json({ error: "Forbidden" });
+    if (comment.userId !== req.userId) return sendError(res, "Forbidden", 403);
 
     // Delete
     const deletedComment = await prisma.comment.delete({ where: { id: commentId } });
-    res.status(200).json(deletedComment);
+    return sendSuccess(res, deletedComment, "Comment deleted successfully");
 
   } catch (err) {
     next(err);

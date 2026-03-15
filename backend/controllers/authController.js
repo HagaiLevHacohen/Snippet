@@ -5,6 +5,8 @@ const bcrypt = require("bcryptjs");
 const passport = require("passport");
 const { prisma } = require("../lib/prisma");
 const jwt = require("jsonwebtoken");
+const { sendSuccess, sendError } = require("../utils/response");
+
 
 
 
@@ -69,58 +71,90 @@ const validateUser = [
 
 
 const postSignup = async (req, res) => {
-  const errors = validationResult(req);
+  try {
+    const errors = validationResult(req);
 
-  if (!errors.isEmpty()) {
-    return res.json({
-      success: false,
-      errors: errors.array(),
-    });
-  }
-
-  // Only use matchedData when validation PASSES
-  const { username, email, name, password } = matchedData(req);
-  const passwordHashed = await bcrypt.hash(password, 10);
-  await prisma.user.create({
-    data: {
-      username: username,
-      name: name,
-      email: email,
-      passwordHashed: passwordHashed
+    if (!errors.isEmpty()) {
+      return sendError(res, "Validation failed", 400, errors.array());
     }
-  })
-  res.json({ success: true, message: "Signup successful" });
+
+    const { username, email, name, password } = matchedData(req);
+    const passwordHashed = await bcrypt.hash(password, 10);
+
+    const user = await prisma.user.create({
+      data: {
+        username,
+        name,
+        email,
+        passwordHashed,
+      },
+      select: { id: true, username: true, name: true, email: true } 
+    });
+
+    sendSuccess(res, user, "Signup successful", 201);
+
+  } catch (err) {
+    next(err);
+  }
 };
 
 const postLogin = (req, res, next) => {
   passport.authenticate("local", { session: false }, (err, user, info) => {
-    if (err) return next(err);
+    if (err) return next(err); // unexpected errors go to global handler
 
     if (!user) {
-      return res.status(401).json({ error: "Invalid credentials" });
+      return sendError(res, "Invalid credentials", 401);
     }
 
-    // Sign the JWT
-    const token = jwt.sign(
-      { userId: user.id},
-      process.env.SECRET,
-      { expiresIn: "1h" }
-    );
+    try {
+      // Sign the JWT
+      const token = jwt.sign(
+        { userId: user.id },
+        process.env.SECRET,
+        { expiresIn: "1h" }
+      );
 
-    // Send the token to the client
-    return res.json({ token });
+      // Return token in standardized format
+      return sendSuccess(res, { token }, "Login successful");
+
+    } catch (jwtErr) {
+      // Any JWT signing error
+      return next(jwtErr);
+    }
   })(req, res, next);
 };
 
 const getUser = async (req, res, next) => {
-    try {
-        const user = await prisma.user.findUnique({
-        where: {id: req.userId},
-        });
-        res.json(user);
-    } catch (err) {
-        next(err);
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.userId },
+      select: {
+        id: true,
+        username: true,
+        name: true,
+        avatarUrl: true,
+        status: true,
+        createdAt: true,
+        _count: {
+          select: {
+            posts: true,
+            followers: true,
+            following: true,
+            likes: true
+          }
+        }
+      }
+    });
+
+    if (!user) {
+      return sendError(res, "User not found", 404);
     }
+
+    return sendSuccess(res, user, "User retrieved successfully");
+
+  } catch (err) {
+    next(err);
+  }
 };
 
 module.exports = { 

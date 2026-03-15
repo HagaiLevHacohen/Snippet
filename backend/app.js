@@ -14,6 +14,7 @@ const indexRouter = require("./routes/indexRouter");
 const authRouter = require("./routes/authRouter");
 const usersRouter = require("./routes/usersRouter");
 const postsRouter = require("./routes/postsRouter");
+const commentsRouter = require("./routes/commentsRouter");
 const likesRouter = require("./routes/likesRouter");
 const followRouter = require("./routes/followRouter");
 
@@ -47,6 +48,7 @@ app.use("/auth", authRouter);
 app.use("/users", usersRouter);
 app.use("/posts", postsRouter);
 app.use("/posts/:id/like", likesRouter);
+app.use("/comments", commentsRouter);
 app.use("/follow", followRouter);
 
 
