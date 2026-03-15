@@ -93,13 +93,13 @@ function Signup() {
   };
 
   return (
-    <div className="font-['Montserrat',sans-serif] min-h-screen flex justify-center  items-start pt-32 text-white bg-linear-to-br from-slate-950 via-indigo-950 to-black">
+    <div className="font-['Montserrat',sans-serif] min-h-screen flex justify-center  items-start pt-18 sm:pt-32 text-white bg-linear-to-br from-slate-950 via-indigo-950 to-black">
       <Link to="/" className="absolute top-6 left-6 text-2xl hover:scale-105 text-purple-400 hover:text-purple-300 font-semibold">
         ← Home
       </Link>
-      <div className='bg-gray-800 border rounded-md border-gray-700 py-4 px-12'>
+      <div className='bg-gray-800 border rounded-md border-gray-700 py-6 px-8 sm:px-12'>
         <h1 className='text-center font-bold text-3xl mb-8'>Sign Up</h1>
-        <form onSubmit={handleSubmit} className='flex flex-col gap-10'>
+        <form onSubmit={handleSubmit} className='flex flex-col gap-4 sm:gap-10'>
           <FormInput
             label="Name"
             name="name"

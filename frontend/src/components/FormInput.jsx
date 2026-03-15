@@ -1,6 +1,6 @@
 function FormInput({ label, name, type = "text", value, onChange, placeholder, required = false }) {
   return (
-    <div className="flex justify-between items-center gap-2">
+    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
       <label htmlFor={name} className="text-gray-300 font-medium whitespace-nowrap text-center">{label}:</label>
       <input
         type={type}

@@ -15,10 +15,10 @@ function Home() {
 
 
   return (
-    <div className="font-['Montserrat',sans-serif] min-h-screen flex text-white bg-linear-to-br from-slate-950 via-indigo-950 to-black">
+    <div className="font-['Montserrat',sans-serif] min-h-screen flex flex-col sm:flex-col lg:flex-row text-white bg-linear-to-br from-slate-950 via-indigo-950 to-black">
 
       {/* Left column */}
-      <div className="flex-1 flex flex-col justify-center items-center text-center px-10 space-y-30">
+      <div className="hidden flex-1 lg:flex lg:flex-col justify-center items-center text-center px-10 space-y-30">
         <DisplaySnippet profilePic={profile1} name="Alice Johnson" username="alicej17" text="The best way to learn programming is still: build something slightly too hard for you." likes={189} comments={29} />
         <DisplaySnippet profilePic={profile2} name="Bob Smith" username="bobsmith" text="Most people underestimate how much progress they can make in one year." likes={5} comments={15} />
       </div>
@@ -45,7 +45,7 @@ function Home() {
       </div>
 
       {/* Right column */}
-      <div className="flex-1 flex flex-col justify-center items-center text-center px-10 space-y-30">
+      <div className=" hidden flex-1 md:flex lg:flex-col justify-center items-center text-center px-10 gap-5 lg:space-y-30">
         <DisplaySnippet profilePic={profile3} name="Charlie Brown" username="charlieb9" text="What's a game you wish you could experience for the first time again?" likes={39} comments={5} />
         <DisplaySnippet profilePic={profile4} name="Diana Prince" username="dianap" text="Why do I open the fridge 10 times like something new will appear" likes={15} comments={8} />
       </div>
