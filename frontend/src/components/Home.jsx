@@ -7,20 +7,12 @@ import profile3 from "../assets/fake_profile_3.jpg";
 import profile4 from "../assets/fake_profile_4.jpg";
 
 function Home() {
-  const navigate = useNavigate();
   const { isLoggedIn } = useAuth(); // check auth state
 
   if (isLoggedIn) {
     return <Navigate to="/feed" />; // redirect if logged in
   }
 
-  const handleSignup = () => {
-    navigate("/signup");
-  };
-  
-  const handleLogin = () => {
-    navigate("/login");
-  };
 
   return (
     <div className="font-['Montserrat',sans-serif] min-h-screen flex text-white bg-linear-to-br from-slate-950 via-indigo-950 to-black">
@@ -33,7 +25,7 @@ function Home() {
 
       {/* Center column */}
       <div className="flex-1 flex flex-col justify-center items-center text-center px-10 space-y-6">
-        <h1 className="text-5xl font-bold">Welcome to snippet</h1>
+        <h1 className="text-5xl font-bold">Welcome to Snippet</h1>
         <h2 className="text-2xl text-purple-400 font-semibold">
           Share thoughts. Spark conversations.
         </h2>
@@ -48,7 +40,7 @@ function Home() {
         <Link to="/login" className="px-6 py-3 border border-gray-400 hover:bg-white hover:text-black rounded-lg font-medium hover:scale-110 transition">
           Log In
         </Link>
-        
+
         </div>
       </div>
 
