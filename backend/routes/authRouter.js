@@ -8,7 +8,7 @@ const authRouter = Router();
 // Routes: /auth
 authRouter.post("/signup", validateUser, postSignup);
 authRouter.post("/login", postLogin);
-authRouter.post("/me", verifyToken, getUser);
+authRouter.get("/me", verifyToken, getUser);
 
 
 
