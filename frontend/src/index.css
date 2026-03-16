@@ -13,3 +13,15 @@
 }
 
 @import "tailwindcss";
+
+/* Prevent white flicker during route transitions by keeping a consistent dark background */
+html,
+body,
+#root {
+  height: 100%;
+  background: radial-gradient(circle at top, #0d111d, #050710);
+}
+
+body {
+  background: #050710;
+}

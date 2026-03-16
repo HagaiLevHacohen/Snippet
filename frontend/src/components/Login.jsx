@@ -41,9 +41,10 @@ function Login() {
         toast.error(data.message || `Error: ${response.status}`);
         return;
       }
-      login(data.data.token); // store token in context
+      await login(data.data.token); // wait until user is fetched
       toast.success("Logged in!");
-      navigate("/feed");
+      navigate("/feed", { replace: true });
+      
     } catch {
       toast.error("Network error. Please try again.");
     } finally {
