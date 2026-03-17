@@ -115,7 +115,7 @@ const postLogin = (req, res, next) => {
       );
 
       // Return token in standardized format
-      return sendSuccess(res, { token }, "Login successful");
+      return sendSuccess(res, token, "Login successful");
 
     } catch (jwtErr) {
       // Any JWT signing error
