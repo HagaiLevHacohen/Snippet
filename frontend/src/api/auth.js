@@ -1,0 +1,22 @@
+import { apiClient } from "./client";
+
+
+export function getCurrentUser() {
+  return apiClient("/auth/me");
+}
+
+export function loginRequest(formData) {
+  return apiClient("/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(formData),
+  });
+}
+
+export function signupRequest(formData) {
+  return apiClient("/auth/signup", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(formData),
+  });
+}
