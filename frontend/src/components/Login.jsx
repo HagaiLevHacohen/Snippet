@@ -15,7 +15,7 @@ function Login() {
     mutationFn: loginRequest,
     onSuccess: async (data) => {
       // backend responses are { success, message, data }
-      const token = data?.data?.token;
+      const token = data?.data; // extract token from response shape
       await login(token); // update auth context with actual token
       toast.success("Logged in!");
       navigate("/feed", { replace: true });

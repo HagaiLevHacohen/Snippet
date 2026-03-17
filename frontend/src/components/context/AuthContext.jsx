@@ -9,12 +9,13 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => Cookies.get("token") || null);
   const queryClient = useQueryClient();
 
-  const {data: user, isLoading, isError, refetch} = useQuery(getCurrentUserQueryOptions(token));
+  const {data, isLoading, isError, refetch} = useQuery(getCurrentUserQueryOptions(token));
+
+  const user = data?.data; // extract user from response shape { success, message, data }
 
   const login = async (newToken) => {
     Cookies.set("token", newToken, { expires: 7, sameSite: "strict" });
     setToken(newToken);
-    await queryClient.invalidateQueries(["auth"]);
   };
 
   const logout = () => {
