@@ -1,14 +1,49 @@
 import { useState } from "react";
+import {createPost} from "../api/post";
+import { useMutation } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 
 export default function NewSnippetDialog({ onClose }) {
   const [content, setContent] = useState("");
+  const [errors, setErrors] = useState({});
 
-  const handlePost = () => {
-    if (content.trim()) {
-      // TODO: Submit the snippet
-      console.log("Posting snippet:", content);
+  const mutation = useMutation({
+    mutationFn: createPost,
+    onSuccess: () => {
+      toast.success("Post created successfully!");
       setContent("");
+      setErrors({});
       onClose();
+    },
+    onError: (err) => {
+      if (err?.errors) {
+        // API validation errors
+        const apiErrors = {};
+        err.errors.forEach((e) => {
+          apiErrors[e.path] = e.msg;
+        });
+        setErrors(apiErrors);
+      } else {
+        toast.error(err.message || "Signup failed. Please try again.");
+      }
+    },
+  });
+
+  const validateForm = () => {
+    const newErrors = {};
+    const trimmedContent = content.trim();
+    if (!trimmedContent) newErrors.content = "Content is required";
+    else if (trimmedContent.length > 500) newErrors.content = "Content must be at most 500 characters";
+    return newErrors;
+  }
+
+  const handlePost = (e) => {
+    e.preventDefault();
+    const validationErrors = validateForm();
+    setErrors(validationErrors);
+
+    if (Object.keys(validationErrors).length === 0) {
+      mutation.mutate({content}); // imageUrl is required by API but we don't support it in UI, so we just send content and let backend handle the rest
     }
   };
 
@@ -29,6 +64,11 @@ export default function NewSnippetDialog({ onClose }) {
           className="w-full h-40 p-3 rounded-lg bg-gray-700 text-white resize-none focus:outline-none focus:ring-2 focus:ring-violet-500"
           placeholder="Write something..."
         ></textarea>
+        {Object.values(errors).map((error, index) => (
+          <p key={index} className="text-red-500 text-sm font-bold">
+            • {error}
+          </p>
+        ))}
         <div className="flex justify-end gap-3 mt-4">
           <button
             className="px-4 py-2 bg-gray-600 rounded-lg hover:bg-gray-700 text-white"
@@ -39,7 +79,7 @@ export default function NewSnippetDialog({ onClose }) {
           <button
             onClick={handlePost}
             disabled={!content.trim()}
-            className="px-4 py-2 bg-violet-500 rounded-lg hover:bg-violet-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-violet-500 rounded-lg hover:bg-violet-600 text-white disabled:opacity-50 disabled:bg-gray-600 disabled:cursor-not-allowed"
           >
             Post
           </button>
