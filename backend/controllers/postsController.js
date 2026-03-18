@@ -10,7 +10,7 @@ const getPosts = async (req, res, next) => {
   try {
     const section = req.query.section; // following
     const search = req.query.search?.trim();
-    const userId = req.query.userId;
+    const userId = Number(req.query.userId);
 
     const page = Math.max(Number(req.query.page) || 1, 1);
     const limit = Math.min(Number(req.query.limit) || 20, 100);
