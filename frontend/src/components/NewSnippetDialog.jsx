@@ -1,11 +1,14 @@
 import { useState } from "react";
 import {createPost} from "../api/post";
-import { useMutation } from "@tanstack/react-query";
+import { useAuth } from "./context/AuthContext";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
 export default function NewSnippetDialog({ onClose }) {
+  const { user } = useAuth();
   const [content, setContent] = useState("");
   const [errors, setErrors] = useState({});
+  const queryClient = useQueryClient();
 
   const mutation = useMutation({
     mutationFn: createPost,
@@ -14,6 +17,7 @@ export default function NewSnippetDialog({ onClose }) {
       setContent("");
       setErrors({});
       onClose();
+      queryClient.resetQueries(["posts", user.id], { exact: true });
     },
     onError: (err) => {
       if (err?.errors) {

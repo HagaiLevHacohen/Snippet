@@ -8,7 +8,7 @@ const { sendSuccess, sendError } = require("../utils/response");
 
 const getPosts = async (req, res, next) => {
   try {
-    const section = req.query.section; // following
+    const section = req.query.section; // "following"
     const search = req.query.search?.trim();
     const userId = Number(req.query.userId);
 
@@ -18,6 +18,7 @@ const getPosts = async (req, res, next) => {
 
     const where = {};
 
+    // Search filter
     if (search) {
       where.content = {
         contains: search,
@@ -25,9 +26,12 @@ const getPosts = async (req, res, next) => {
       };
     }
 
+    // Specific user posts
     if (userId) {
       where.userId = userId;
-    } else if (section === "following") {
+    }
+    // Following feed
+    else if (section === "following") {
       where.user = {
         followers: {
           some: {
@@ -37,32 +41,63 @@ const getPosts = async (req, res, next) => {
       };
     }
 
-    // Get total number of pages for pagination
+    // Total count for pagination
     const totalCount = await prisma.post.count({ where });
     const totalPages = Math.max(Math.ceil(totalCount / limit), 1);
 
+    // Fetch posts
     const posts = await prisma.post.findMany({
-    where: where,
-    orderBy: { createdAt: "desc" },
-    take: limit,
-    skip,
-    include: {
-        user: { select: { id: true, username: true, name: true, avatarUrl: true } },
-        _count: { select: { likes: true, comments: true } },
-    },
+      where,
+      orderBy: { createdAt: "desc" },
+      take: limit,
+      skip,
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            name: true,
+            avatarUrl: true,
+          },
+        },
+        _count: {
+          select: {
+            likes: true,
+            comments: true,
+          },
+        },
+        // Only current user's like
+        likes: {
+          where: {
+            userId: req.userId,
+          },
+          select: {
+            userId: true,
+          },
+        },
+      },
     });
 
-    sendSuccess(res, {
-      posts,
-      page,
-      totalPages,
-      totalCount,
-    }, "Posts retrieved successfully");
+    // Add isLiked boolean & clean response
+    const postsWithLiked = posts.map((post) => ({
+      ...post,
+      isLiked: post.likes.length > 0,
+      likes: undefined, // optional: remove raw likes array
+    }));
 
-
-    } catch (err) {
-      next(err);
-    }
+    sendSuccess(
+      res,
+      {
+        posts: postsWithLiked,
+        page,
+        totalPages,
+        totalCount,
+      },
+      "Posts retrieved successfully"
+    );
+  } catch (err) {
+    next(err);
+  }
 };
 
 

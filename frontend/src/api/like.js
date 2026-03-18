@@ -19,3 +19,10 @@ export async function getLikes({ userId, page = 1, limit = 20 }) {
     nextPage: page < totalPages ? page + 1 : undefined,
   };
 }
+
+export function createLike(postId) {
+  return apiClient(`/posts/${postId}/like`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  });
+}

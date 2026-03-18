@@ -22,7 +22,7 @@ export default function FeedList({ activeTab, user }) {
   if (isLoading) return <Spinner />;
 
   return (
-    <div>
+    <div className='flex flex-col'>
       {data.pages.map(page =>
         page.items.map(item => <Snippet key={item.id} item={item} />)
       )}

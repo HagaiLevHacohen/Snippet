@@ -19,3 +19,11 @@ export async function getComments({ userId, page = 1, limit = 20 }) {
     nextPage: page < totalPages ? page + 1 : undefined,
   };
 }
+
+export function createComment(postId, content) {
+  return apiClient(`/posts/${postId}/comments`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content }),
+  });
+}

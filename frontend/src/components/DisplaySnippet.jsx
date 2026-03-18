@@ -20,7 +20,7 @@ function DisplaySnippet({
           className="w-15 h-15 rounded-full object-cover border border-gray-600"
         />
         <span className="text-white">{name}</span>
-        <span className="text-gray-400 text-sm">@{username} • {time}</span>
+        <span className="text-gray-400 text-sm">@ {username} • {time}</span>
       </div>
 
       {/* Snippet text */}

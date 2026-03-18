@@ -10,14 +10,11 @@ function Profile() {
   const [activeTab, setActiveTab] = useState("posts");
 
   return (
-    <div className='h-full w-full flex flex-col items-center justify-start gap-4 px-32 pt-4 overflow-auto'>
+    <div className='h-screen w-full flex flex-col items-center justify-start gap-4 px-32 pt-4 overflow-auto'>
         <ProfileHeader user={user} />
-        <div className="flex-1 w-7/10 min-w-75 bg-gray-800 border border-gray-700 rounded-t-md flex flex-col gap-4">
-          <Tabs
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-          />
-          <FeedList user={user} activeTab={activeTab}/>
+        <div className="w-7/10 min-w-75 bg-gray-800 border border-gray-700 rounded-t-md flex flex-col">
+          <Tabs activeTab={activeTab} setActiveTab={setActiveTab} />
+          <FeedList user={user} activeTab={activeTab} />
         </div>
         <NewSnippetButton />
     </div>
