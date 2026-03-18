@@ -8,30 +8,38 @@ const { sendSuccess, sendError } = require("../utils/response");
 
 const getPosts = async (req, res, next) => {
   try {
-    const section = req.query.section || "recent"; // recent OR following
-    const search = req.query.search || "";
+    const section = req.query.section; // following
+    const search = req.query.search?.trim();
+    const userId = req.query.userId;
 
     const page = Math.max(Number(req.query.page) || 1, 1);
     const limit = Math.min(Number(req.query.limit) || 20, 100);
-
     const skip = (page - 1) * limit;
 
-    const where = {
-        content: {
-            contains: search,
-            mode: "insensitive",
-        },
-    };
+    const where = {};
 
-    if (section === "following") {
-        where.user = {
-            followers: {
-            some: {
-                followerId: req.userId,
-            },
-            },
-        };
+    if (search) {
+      where.content = {
+        contains: search,
+        mode: "insensitive",
+      };
     }
+
+    if (userId) {
+      where.userId = userId;
+    } else if (section === "following") {
+      where.user = {
+        followers: {
+          some: {
+            followerId: req.userId,
+          },
+        },
+      };
+    }
+
+    // Get total number of pages for pagination
+    const totalCount = await prisma.post.count({ where });
+    const totalPages = Math.max(Math.ceil(totalCount / limit), 1);
 
     const posts = await prisma.post.findMany({
     where: where,
@@ -44,10 +52,16 @@ const getPosts = async (req, res, next) => {
     },
     });
 
-    sendSuccess(res, posts, "Posts retrieved successfully");
+    sendSuccess(res, {
+      posts,
+      page,
+      totalPages,
+      totalCount,
+    }, "Posts retrieved successfully");
+
 
     } catch (err) {
-        next(err);
+      next(err);
     }
 };
 

@@ -173,5 +173,94 @@ const updateUser = async (req, res, next) => {
 };
 
 
+const getUserLikes = async (req, res, next) => {
+  try {
+    const userId = Number(req.params.id);
+    if (isNaN(userId)) return sendError(res, "Invalid user id", 400);
 
-module.exports = { getUserById, getFollowers, getFollowing, validateUserUpdate, updateUser};
+    // Check if the user exists
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) return sendError(res, "User not found", 404);
+
+    // Pagination params
+    const page = Math.max(Number(req.query.page) || 1, 1);
+    const limit = Math.min(Number(req.query.limit) || 20, 100);
+    const skip = (page - 1) * limit;
+
+    const where = { userId };
+
+    // Get total likes count (for pagination)
+    const totalCount = await prisma.like.count({ where });
+    const totalPages = Math.max(Math.ceil(totalCount / limit), 1);
+
+    // Get liked posts with pagination
+    const likes = await prisma.like.findMany({
+      where,
+      skip,
+      take: limit,
+      select: {
+        post: {
+          include: {
+            user: { select: { id: true, username: true, name: true, avatarUrl: true } },
+            _count: { select: { likes: true, comments: true } },
+            // optional: limit comments for performance
+            comments: {
+              include: { user: { select: { id: true, username: true, name: true, avatarUrl: true } } },
+              orderBy: { createdAt: "asc" },
+            },
+          },
+        },
+      },
+    });
+
+    const likedPosts = likes.map(l => l.post);
+
+    sendSuccess(
+      res,
+      { posts: likedPosts, page, totalPages, totalCount },
+      "User liked posts retrieved successfully"
+    );
+  } catch (err) {
+    next(err);
+  }
+};
+
+
+const getUserComments = async (req, res, next) => {
+  try {
+    const userId = Number(req.params.id);
+    if (isNaN(userId)) return sendError(res, "Invalid user id", 400);
+
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) return sendError(res, "User not found", 404);
+
+    // Pagination
+    const page = Math.max(Number(req.query.page) || 1, 1);
+    const limit = Math.min(Number(req.query.limit) || 20, 100);
+    const skip = (page - 1) * limit;
+
+    const where = { userId };
+
+    const totalCount = await prisma.comment.count({ where });
+    const totalPages = Math.max(Math.ceil(totalCount / limit), 1);
+
+    const comments = await prisma.comment.findMany({
+      where,
+      skip,
+      take: limit,
+      include: {
+        user: { select: { id: true, username: true, name: true, avatarUrl: true } },
+        post: { select: { id: true, content: true, imageUrl: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    sendSuccess(res, { comments, page, totalPages, totalCount }, "User comments retrieved successfully");
+  } catch (err) {
+    next(err);
+  }
+};
+
+
+
+module.exports = { getUserById, getFollowers, getFollowing, getUserLikes, getUserComments, validateUserUpdate, updateUser};
