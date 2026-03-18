@@ -1,7 +1,13 @@
-export default function Spinner({ size = 8, color = "white" }) {
+export default function Spinner({ size = 2, color = "white" }) {
+  const dimension = `${size}rem`; // or `${size}px` if you prefer pixels
+  const borderColor = color === "white" ? "border-white" : `border-${color}-400`;
+
   return (
-    <div
-      className={`w-${size} h-${size} border-4 border-${color}-400 border-t-transparent rounded-full animate-spin`}
-    ></div>
+    <div className="w-full h-full flex justify-center items-center">
+      <div
+        className={`border-4 ${borderColor} border-t-transparent rounded-full animate-spin`}
+        style={{ width: dimension, height: dimension }}
+      ></div>
+    </div>
   );
 }

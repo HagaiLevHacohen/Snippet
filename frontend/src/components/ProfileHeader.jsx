@@ -1,16 +1,14 @@
 import { useState } from 'react'
 import { useParams } from "react-router-dom";
-import { useAuth } from "./context/AuthContext";
 import avatar from "../assets/avatars/avatar.png";
 
-function ProfileHeader() {
-  const { user } = useAuth();
+function ProfileHeader({ user }) {
   const { username } = useParams();
   const isOwnProfile = user?.username === username;
 
 
   return (
-    <div className='flex flex-col w-200 bg-gray-800 rounded-lg p-4 gap-8'>
+    <div className='flex flex-col w-7/10 min-w-75 bg-gray-800 rounded-lg p-4 gap-8'>
 
       <div className='flex w-full items-center justify-between'>
         <div className="flex items-center gap-4">
