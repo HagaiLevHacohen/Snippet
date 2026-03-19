@@ -26,3 +26,11 @@ export function createLike(postId) {
     headers: { "Content-Type": "application/json" },
   });
 }
+
+
+export function toggleLike(postId) {
+  return apiClient(`/posts/${postId}/like`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+  });
+}

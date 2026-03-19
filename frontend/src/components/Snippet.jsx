@@ -3,24 +3,62 @@ import avatar from "../assets/avatars/avatar.png";
 import { format } from 'timeago.js';
 import CommentForm from "./CommentForm";
 import { useMutation } from "@tanstack/react-query";
-import { createLike } from "../api/like";
+import { useQueryClient } from "@tanstack/react-query";
+import { toggleLike } from "../api/like";
 
+function Snippet({ item, queryKey }) {
+  const queryClient = useQueryClient();
 
-function Snippet({item}) {
+  const mutation = useMutation({ // optimistic update
+    mutationFn: toggleLike,
 
-  const mutation = useMutation({
-    mutationFn: createLike,
-    onSuccess: () => {
-        // Optionally, you can invalidate or refetch queries here to update the UI
+    onMutate: async (postId) => { // runs before the API call
+      await queryClient.cancelQueries({ queryKey }); // cancel any outgoing refetches (so they don't overwrite our optimistic update)
+
+      const previousData = queryClient.getQueryData(queryKey); // snapshot the previous value
+
+      queryClient.setQueryData(queryKey, (oldData) => { // optimistically update to the new value
+        if (!oldData) return oldData;
+
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page) => ({
+            ...page,
+            items: page.items.map((post) => {
+              if (post.id !== postId) return post;
+
+              const isLiked = !post.isLiked;
+
+              return {
+                ...post,
+                isLiked,
+                _count: {
+                  ...post._count,
+                  likes: isLiked
+                    ? post._count.likes + 1
+                    : post._count.likes - 1,
+                },
+              };
+            }),
+          })),
+        };
+      });
+
+      return { previousData }; // return the snapshotted value so we can use it in case of an error
     },
-    onError: (err) => {
-        toast.error(err.message || "like failed. Please try again.");
+
+    onError: (err, postId, context) => { // if the mutation fails, use the context returned from onMutate to roll back
+      queryClient.setQueryData(queryKey, context.previousData);
+    },
+
+    onSettled: () => { // always refetch after error or success:
+      queryClient.invalidateQueries({ queryKey });
     },
   });
 
   const handleLike = () => {
     mutation.mutate(item.id);
-  }
+  };
   
   return (
     <div className="p-4 bg-gray-800 border border-gray-700 shadow-md text-gray-100 space-y-6 hover:shadow-pink-400 hover:shadow-lg transition">
