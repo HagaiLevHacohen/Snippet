@@ -108,25 +108,36 @@ const getPost = async (req, res, next) => {
     if (isNaN(postId)) {
       return sendError(res, "Invalid post id", 400);
     }
-    const post = await prisma.post.findUnique({
+    let post = await prisma.post.findUnique({
     where: { id: postId },
     include: {
         user: {
         select: { id: true, username: true, name: true, avatarUrl: true },
         },
         comments: {
-        include: {
-            user: { select: { id: true, username: true, name: true, avatarUrl: true } },
-        },
-        orderBy: { createdAt: "asc" },
+          include: {
+              user: { select: { id: true, username: true, name: true, avatarUrl: true } },
+          },
+          orderBy: { createdAt: "asc" },
         },
         _count: {
         select: { likes: true, comments: true },
+        },
+        likes: {
+          where: {
+            userId: req.userId,
+          },
+          select: {
+            userId: true,
+          },
         },
     },
     });
 
     if (!post) return sendError(res, "Post not found", 404);
+
+    // Add isLiked boolean & clean response
+    post = {...post, isLiked: post.likes.length > 0, likes: undefined};
 
     sendSuccess(res, post, "Post retrieved successfully");
 
