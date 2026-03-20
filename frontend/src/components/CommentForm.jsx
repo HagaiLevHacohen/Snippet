@@ -1,13 +1,18 @@
-import { useState, useRef } from "react";
+import { useState, useRef, use } from "react";
 import { createComment } from "../api/comment";
 import { useMutation } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
+import { useAuth } from "./context/AuthContext";
+
 
 function CommentForm({ postId }) {
   const [isActive, setIsActive] = useState(false);
   const [commentContent, setCommentContent] = useState("");
   const [errors, setErrors] = useState({});
   const textareaRef = useRef(null);
+  const queryClient = useQueryClient();
+  const { user }  = useAuth();
 
   const mutation = useMutation({
     mutationFn: createComment,
@@ -15,6 +20,10 @@ function CommentForm({ postId }) {
       toast.success("Comment created successfully!");
       setCommentContent("");
       setErrors({});
+
+      queryClient.invalidateQueries({ queryKey: ['post', postId] });
+      queryClient.invalidateQueries({ queryKey: ['comments', user?.id] });
+
     },
     onError: (err) => {
       if (err?.errors) {

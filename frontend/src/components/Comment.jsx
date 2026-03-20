@@ -22,7 +22,7 @@ function Comment({ item }) {
             {item.user.name}
           </span>
           <span className="text-gray-400">
-            @{item.user.username} • {format(item.createdAt)}
+            @ {item.user.username} • {format(item.createdAt)}
           </span>
           {item.post && (
             <Link to={`/posts/${item.post.id}`} className="text-blue-500 ml-auto text-xs">
