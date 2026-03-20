@@ -196,6 +196,7 @@ const getUserLikes = async (req, res, next) => {
     // Get liked posts with pagination
     const likes = await prisma.like.findMany({
       where,
+      orderBy: { createdAt: "desc" },
       skip,
       take: limit,
       select: {
@@ -206,14 +207,14 @@ const getUserLikes = async (req, res, next) => {
             // optional: limit comments for performance
             comments: {
               include: { user: { select: { id: true, username: true, name: true, avatarUrl: true } } },
-              orderBy: { createdAt: "asc" },
+              orderBy: { createdAt: "desc" },
             },
           },
         },
       },
     });
 
-    const likedPosts = likes.map(l => l.post);
+    const likedPosts = likes.map(l => {return {...l.post, isLiked: true};});
 
     sendSuccess(
       res,
@@ -246,13 +247,22 @@ const getUserComments = async (req, res, next) => {
 
     const comments = await prisma.comment.findMany({
       where,
+      orderBy: { createdAt: "desc" },
       skip,
       take: limit,
       include: {
-        user: { select: { id: true, username: true, name: true, avatarUrl: true } },
-        post: { select: { id: true, content: true, imageUrl: true } },
+        user: {
+          select: { id: true, username: true, name: true, avatarUrl: true },
+        },
+        post: {
+          select: {
+            id: true,
+            user: {
+              select: { name: true },
+            },
+          },
+        },
       },
-      orderBy: { createdAt: "desc" },
     });
 
     sendSuccess(res, { comments, page, totalPages, totalCount }, "User comments retrieved successfully");

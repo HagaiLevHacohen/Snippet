@@ -5,60 +5,6 @@ const { prisma } = require("../lib/prisma");
 const { sendSuccess, sendError } = require("../utils/response");
 
 
-const getComments = async (req, res, next) => {
-  try {
-    const userId = Number(req.query.userId);
-
-    const page = Math.max(Number(req.query.page) || 1, 1);
-    const limit = Math.min(Number(req.query.limit) || 20, 100);
-    const skip = (page - 1) * limit;
-
-    const where = {};
-
-    // Specific user comments
-    if (userId) {
-      where.userId = userId;
-    }
-
-    // Total count for pagination
-    const totalCount = await prisma.comment.count({ where });
-    const totalPages = Math.max(Math.ceil(totalCount / limit), 1);
-
-    // Fetch comments
-    const comments = await prisma.comment.findMany({
-      where: where,
-      include: {
-        user: {
-          select: { id: true, username: true, name: true, avatarUrl: true },
-        },
-        post: {
-          select: {
-            id: true,
-            user: {
-              select: { name: true },
-            },
-          },
-        },
-      },
-    });
-
-    sendSuccess(
-      res,
-      {
-        comments,
-        page,
-        totalPages,
-        totalCount,
-      },
-      "Comments retrieved successfully"
-    );
-  } catch (err) {
-    next(err);
-  }
-};
-
-
-
 const getComment = async (req, res, next) => {
   try {
     const commentId = Number(req.params.id);
