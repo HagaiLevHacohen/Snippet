@@ -8,6 +8,7 @@ import Feed from "./components/Feed.jsx";
 import Explore from "./components/Explore.jsx";
 import Search from "./components/Search.jsx";
 import Profile from "./components/Profile.jsx";
+import Post from "./components/Post.jsx";
 
 const routes = [
   { path: "/", element: <Home /> },
@@ -24,7 +25,8 @@ const routes = [
       { path: "feed", element: <Feed /> },
       { path: "explore", element: <Explore /> },
       { path: "search", element: <Search /> },
-      { path: "profile/:username", element: <Profile /> }
+      { path: "profile/:username", element: <Profile /> },
+      { path: "posts/:postId", element: <Post /> }
     ]
   },
 

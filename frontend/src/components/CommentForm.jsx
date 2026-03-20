@@ -32,6 +32,7 @@ function CommentForm({ postId }) {
 
 
   const handleChange = (e) => {
+    e.stopPropagation();
     setCommentContent(e.target.value);
 
     const el = textareaRef.current;
@@ -41,7 +42,8 @@ function CommentForm({ postId }) {
     el.style.height = el.scrollHeight + "px";
   };
 
-  const handleCancel = () => {
+  const handleCancel = (e) => {
+    e.stopPropagation();
     setIsActive(false);
     setCommentContent("");
     setErrors({});
@@ -54,7 +56,8 @@ function CommentForm({ postId }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    mutation.mutate(postId, commentContent);
+    e.stopPropagation();
+    mutation.mutate({ postId, content: commentContent });
     handleCancel();
   };
 
@@ -66,7 +69,8 @@ function CommentForm({ postId }) {
         placeholder="Write a comment..."
         value={commentContent}
         onChange={handleChange}
-        onFocus={() => setIsActive(true)}
+        onClick={(e) => e.stopPropagation()}
+        onFocus={() => {setIsActive(true)}}
         rows={1}
         maxLength={500}
         required
@@ -78,6 +82,7 @@ function CommentForm({ postId }) {
       {isActive && (
         <div className="flex justify-end gap-3">
           <button
+            onClick={(e) => e.stopPropagation()}
             type="submit"
             className="h-10 w-24 bg-violet-500 rounded-lg hover:bg-violet-600 text-white"
           >

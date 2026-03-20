@@ -1,13 +1,23 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { getPosts } from '../api/post';
 import { useRef, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { getComments } from '../api/comment';
 import { getLikes } from '../api/like'; 
 import Spinner from './Spinner';
 import Snippet from './Snippet';
+import Comment from './Comment';
 
 export default function FeedList({ activeTab, user }) {
   const observerRef = useRef(null);
+  const navigate = useNavigate();
+  const location = useLocation(); // current route info
+
+  const openPost = (postId) => {
+    navigate(`/posts/${postId}`, {
+      state: { from: location.pathname + location.search }
+    });
+  };
 
 
   const fetcher = ({ pageParam = 1 }) => {
@@ -47,10 +57,21 @@ export default function FeedList({ activeTab, user }) {
 
   return (
     <div className='flex flex-col'>
-      {data.pages.map(page =>
-        page.items.map(item => <Snippet key={item.id} item={item} queryKey={[activeTab, user.id]} />)
-      )}
-
+      { activeTab === 'posts' && 
+      data.pages.map(page =>
+        page.items.map(item => <Snippet key={item.id} item={item} queryKey={[activeTab, user.id]} clickable onClick={() => openPost(item.id)} />)
+      )
+      }
+      { activeTab === 'comments' && 
+      data.pages.map(page =>
+        page.items.map(item => <Comment key={item.id} item={item} />)
+      )
+      }
+      { activeTab === 'likes' && 
+      data.pages.map(page =>
+        page.items.map(item => <Snippet key={item.id} item={item} queryKey={[activeTab, user.id]} clickable onClick={() => openPost(item.id)} />)
+      )
+      }
       {/* Sentinel + Spinner */}
       <div ref={observerRef} className="h-10 flex justify-center items-center">
         {isFetchingNextPage && <Spinner />}

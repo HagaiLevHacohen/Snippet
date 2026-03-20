@@ -6,7 +6,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useQueryClient } from "@tanstack/react-query";
 import { toggleLike } from "../api/like";
 
-function Snippet({ item, queryKey }) {
+function Snippet({ item, queryKey, clickable, onClick }) {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({ // optimistic update
@@ -20,6 +20,21 @@ function Snippet({ item, queryKey }) {
       queryClient.setQueryData(queryKey, (oldData) => { // optimistically update to the new value
         if (!oldData) return oldData;
 
+        // If it’s a single post
+        if (!oldData.pages) {
+          return {
+            ...oldData,
+            isLiked: !oldData.isLiked,
+            _count: {
+              ...oldData._count,
+              likes: oldData.isLiked
+                ? oldData._count.likes - 1
+                : oldData._count.likes + 1
+            }
+          };
+        }
+
+        // If it’s an infinite query with pages
         return {
           ...oldData,
           pages: oldData.pages.map((page) => ({
@@ -56,12 +71,13 @@ function Snippet({ item, queryKey }) {
     },
   });
 
-  const handleLike = () => {
+  const handleLike = (e) => {
+    e.stopPropagation(); // prevent triggering onClick for the whole snippet
     mutation.mutate(item.id);
   };
   
   return (
-    <div className="p-4 bg-gray-800 border border-gray-700 shadow-md text-gray-100 space-y-6 hover:shadow-pink-400 hover:shadow-lg transition">
+    <div onClick={clickable ? onClick : undefined} className={`${clickable ? 'cursor-pointer hover:shadow-pink-400 hover:shadow-lg transition' : ''} p-4 bg-gray-800 border border-gray-700 shadow-md text-gray-100 space-y-6`}>
       
       {/* Profile picture */}
       <div className="flex items-center space-x-3">
@@ -76,7 +92,9 @@ function Snippet({ item, queryKey }) {
       </div>
 
       {/* Snippet text */}
-      <p className="text-lg pl-4">{item.content}</p>
+      <p className="text-lg pl-4 whitespace-pre-wrap wrap-break-word break-all">
+        {item.content}
+      </p>
 
       {/* Comment section */}
         <CommentForm postId={item.id} />

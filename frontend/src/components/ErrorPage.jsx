@@ -15,7 +15,7 @@ function ErrorPage() {
         </h2>
 
         <p className="text-gray-400 mb-6">
-          The page you are looking for doesn’t exist or was moved.
+          The page you are looking for doesn't exist or was moved.
         </p>
 
         <button

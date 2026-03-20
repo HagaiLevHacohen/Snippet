@@ -9,6 +9,18 @@ export function createPost(formData) {
   });
 }
 
+export async function getPost(postId) {
+  const res = await apiClient(`/posts/${postId}`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!res.success) {
+    throw new Error(res.message || "Failed to fetch posts");
+  }
+  return res.data;
+}
+
+
 
 export async function getPosts({ userId, page = 1, limit = 20, section, search }) {
   const params = new URLSearchParams();
