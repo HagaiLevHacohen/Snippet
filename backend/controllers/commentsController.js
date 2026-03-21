@@ -105,4 +105,4 @@ const deleteComment = async (req, res, next) => {
 
 
 
-module.exports = { getComment, validateComment, updateComment, deleteComment, getComments};
+module.exports = { getComment, validateComment, updateComment, deleteComment};
