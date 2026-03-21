@@ -5,6 +5,7 @@ import CommentForm from "./CommentForm";
 import { useMutation } from "@tanstack/react-query";
 import { useQueryClient } from "@tanstack/react-query";
 import { toggleLike } from "../api/like";
+import { Link } from 'react-router-dom';
 
 function Snippet({ item, queryKey, clickable, onClick }) {
   const queryClient = useQueryClient();
@@ -86,7 +87,9 @@ function Snippet({ item, queryKey, clickable, onClick }) {
           alt="Profile" 
           className="w-15 h-15 rounded-full object-cover border border-gray-600"
         />
-        <span className="text-white">{item.user.name}</span>
+        <Link to={`/profile/${item.user.username}`} onClick={(e) => e.stopPropagation()} className="text-white">
+          {item.user.name}
+        </Link>
         <span className="text-gray-400 text-sm">@ {item.user.username}</span>
         <span className="text-gray-400 text-sm ml-auto">{format(item.createdAt)}</span>
       </div>

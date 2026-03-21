@@ -1,17 +1,19 @@
-import { useState } from 'react'
 
-function Tabs({ activeTab, setActiveTab }) {
-    const [count, setCount] = useState(0)
 
-    const isPostsActive = activeTab === "posts";
-    const isCommentsActive = activeTab === "comments";
-    const isLikesActive = activeTab === "likes";
-
+function Tabs({ activeTab, setActiveTab, page }) {
+    
     return (
         <div className='flex border-b h-12 border-gray-700'>
-            <div onClick={() => setActiveTab("posts")} className={`flex-1 ${isPostsActive ? 'bg-indigo-500 ' : 'hover:bg-gray-600'} rounded-tl-md flex border-r border-gray-700 justify-center items-center transition-colors duration-300`}>Posts</div>
-            <div onClick={() => setActiveTab("comments")} className={`flex-1 ${isCommentsActive ? 'bg-indigo-500' : 'hover:bg-gray-600'} flex border-r border-gray-700 justify-center items-center transition-colors duration-300`}>Comments</div>
-            <div onClick={() => setActiveTab("likes")} className={`flex-1 rounded-tr-md ${isLikesActive ? 'bg-indigo-500' : 'hover:bg-gray-600'} flex border-r border-gray-700 justify-center items-center transition-colors duration-300`}>Likes</div>
+            { page === 'profile' ? <>
+            <div onClick={() => setActiveTab("posts")} className={`flex-1 ${activeTab === "posts" ? 'bg-indigo-500 ' : 'hover:bg-gray-600'} rounded-tl-md flex border-r border-gray-700 justify-center items-center transition-colors duration-300`}>Posts</div>
+            <div onClick={() => setActiveTab("comments")} className={`flex-1 ${activeTab === "comments" ? 'bg-indigo-500' : 'hover:bg-gray-600'} flex border-r border-gray-700 justify-center items-center transition-colors duration-300`}>Comments</div>
+            <div onClick={() => setActiveTab("likes")} className={`flex-1 ${activeTab === "likes" ? 'bg-indigo-500' : 'hover:bg-gray-600'} rounded-tr-md flex border-r border-gray-700 justify-center items-center transition-colors duration-300`}>Likes</div>
+            </> :
+            <>
+            <div onClick={() => setActiveTab("recent")} className={`flex-1 ${activeTab === "recent" ? 'bg-indigo-500 ' : 'hover:bg-gray-600'} rounded-tl-md flex border-r border-gray-700 justify-center items-center transition-colors duration-300`}>Recent</div>
+            <div onClick={() => setActiveTab("following")} className={`flex-1 ${activeTab === "following" ? 'bg-indigo-500' : 'hover:bg-gray-600'} rounded-tr-md flex border-r border-gray-700 justify-center items-center transition-colors duration-300`}>Following</div>
+            </>
+            } 
         </div>
     )
 }

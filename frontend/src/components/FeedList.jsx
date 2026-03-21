@@ -23,7 +23,10 @@ export default function FeedList({ activeTab, user }) {
   const fetcher = ({ pageParam = 1 }) => {
     if (activeTab === 'posts') return getPosts({ userId: user.id, page: pageParam });
     if (activeTab === 'comments') return getComments({ userId: user.id, page: pageParam });
-    return getLikes({ userId: user.id, page: pageParam });
+    if (activeTab === 'likes') return getLikes({ userId: user.id, page: pageParam });
+    if (activeTab === 'following') return getPosts({ section: 'following', page: pageParam });
+    return getPosts({ page: pageParam }); // default to posts for recent
+
   };
 
   const {data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading} = useInfiniteQuery({
@@ -68,6 +71,16 @@ export default function FeedList({ activeTab, user }) {
       )
       }
       { activeTab === 'likes' && 
+      data.pages.map(page =>
+        page.items.map(item => <Snippet key={item.id} item={item} queryKey={[activeTab, user.id]} clickable onClick={() => openPost(item.id)} />)
+      )
+      }
+      { activeTab === 'following' && 
+      data.pages.map(page =>
+        page.items.map(item => <Snippet key={item.id} item={item} queryKey={[activeTab, user.id]} clickable onClick={() => openPost(item.id)} />)
+      )
+      }
+      { activeTab === 'recent' && 
       data.pages.map(page =>
         page.items.map(item => <Snippet key={item.id} item={item} queryKey={[activeTab, user.id]} clickable onClick={() => openPost(item.id)} />)
       )
