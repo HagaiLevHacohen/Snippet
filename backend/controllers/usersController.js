@@ -15,7 +15,7 @@ const getUserById = async (req, res, next) => {
     }
 
     const user = await prisma.user.findUnique({
-      where: { id : userId },
+      where: { id: userId },
       select: {
         id: true,
         username: true,
@@ -30,19 +30,100 @@ const getUserById = async (req, res, next) => {
             following: true,
             likes: true
           }
-        }
-      }
-    })
+        },
+        followers: {
+          where: { followerId: req.userId },
+          select: { followerId: true },
+        },
+        incomingRequests: {
+          where: { outgoingRequestId: req.userId },
+          select: { status: true },
+        },
+      },
+    });
 
     if (!user) {
       return sendError(res, "User not found", 404);
     }
 
-    return sendSuccess(res, user, "User retrieved successfully");
+    let followStatus = "NONE";
+
+    if (user.followers.length > 0) {
+      followStatus = "FOLLOWING";
+    } else if (user.incomingRequests.some(req => req.status === "PENDING")) {
+      followStatus = "REQUESTED";
+    }
+
+    const result = {
+      ...user,
+      followStatus,
+    };
+
+    return sendSuccess(res, result, "User retrieved successfully");
   } catch (err) {
     next(err);
   }
 };
+
+const getUserByUsername = async (req, res, next) => {
+  try {
+    const username = req.params.username;
+
+    if (!username || typeof username !== "string") {
+      return sendError(res, "Invalid username", 400);
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { username },
+      select: {
+        id: true,
+        username: true,
+        name: true,
+        avatarUrl: true,
+        status: true,
+        createdAt: true,
+        _count: {
+          select: {
+            posts: true,
+            followers: true,
+            following: true,
+            likes: true
+          }
+        },
+        followers: {
+          where: { followerId: req.userId },
+          select: { followerId: true },
+        },
+        incomingRequests: {
+          where: { outgoingRequestId: req.userId },
+          select: { status: true },
+        },
+      },
+    });
+
+    if (!user) {
+      return sendError(res, "User not found", 404);
+    }
+
+    let followStatus = "NONE";
+
+    if (user.followers.length > 0) {
+      followStatus = "FOLLOWING";
+    } else if (user.incomingRequests.some(req => req.status === "PENDING")) {
+      followStatus = "REQUESTED";
+    }
+
+    const result = {
+      ...user,
+      followStatus,
+    };
+
+    return sendSuccess(res, result, "User retrieved successfully");
+  } catch (err) {
+    next(err);
+  }
+};
+
 
 
 const getFollowers = async (req, res, next) => {
@@ -107,6 +188,34 @@ const getFollowing = async (req, res, next) => {
   }
 };
 
+
+const getFollowRequests = async (req, res, next) => {
+  try {
+    const followRequests = await prisma.followRequest.findMany({
+      where: { 
+        incomingRequestId: req.userId,
+      },
+      include: {
+        outgoingRequest: {
+          select: {
+            id: true,
+            username: true,
+            name: true,
+            avatarUrl: true
+          }
+        }
+      }
+    });
+    const result = followRequests.map(r => ({
+      ...r.outgoingRequest,
+      status: r.status
+    }));
+
+    return sendSuccess(res, result, "Follow requests retrieved successfully");
+  } catch (err) {
+    next(err);
+  }
+};
 
 const validateUserUpdate = [
   body("name")
@@ -273,4 +382,4 @@ const getUserComments = async (req, res, next) => {
 
 
 
-module.exports = { getUserById, getFollowers, getFollowing, getUserLikes, getUserComments, validateUserUpdate, updateUser};
+module.exports = { getUserByUsername, getUserById, getFollowers, getFollowRequests, getFollowing, getUserLikes, getUserComments, validateUserUpdate, updateUser};
