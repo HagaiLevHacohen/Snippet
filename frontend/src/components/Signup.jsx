@@ -2,7 +2,6 @@ import { useState } from "react";
 import FormInput from "./FormInput";
 import { Link } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
-import { apiClient } from "../api/client";
 import toast from "react-hot-toast";
 import { signupRequest } from "../api/auth";
 

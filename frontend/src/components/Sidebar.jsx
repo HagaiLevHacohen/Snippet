@@ -8,6 +8,7 @@ import searchIcon from "../assets/icons/search.png";
 import settingsIcon from "../assets/icons/settings.png";
 import userIcon from "../assets/icons/user.png";
 import logoutIcon from "../assets/icons/logout.png";
+import letter from "../assets/icons/letter.png";
 
 function Sidebar() {
   const [page, setPage] = useState("feed") // feed, profile, search, explore, settings
@@ -27,6 +28,7 @@ function Sidebar() {
           <SidebarItem title="Profile" icon={userIcon} to={`/profile/${user?.username}`} selected={page === "profile"} onClick={() => setPage("profile")} />
           <SidebarItem title="Search" icon={searchIcon} to="/search" selected={page === "search"} onClick={() => setPage("search")} />
           <SidebarItem title="Explore" icon={compassIcon} to="/explore" selected={page === "explore"} onClick={() => setPage("explore")} />
+          <SidebarItem title="Follow Requests" icon={letter} to="/requests" selected={page === "requests"} onClick={() => setPage("requests")} />
         </div>
 
 

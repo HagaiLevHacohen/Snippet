@@ -1,10 +1,30 @@
 import { useState } from 'react'
-import { useParams } from "react-router-dom";
+import { useAuth } from "./context/AuthContext";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import avatar from "../assets/avatars/avatar.png";
+import { createRequest } from '../api/follow';
+import toast from "react-hot-toast";
 
 function ProfileHeader({ user }) {
-  const { username } = useParams();
-  const isOwnProfile = user?.username === username;
+  const { user: authUser } = useAuth();
+  const queryClient = useQueryClient();
+  const isOwnProfile = user?.username === authUser?.username;
+
+  const mutation = useMutation({
+    mutationFn: createRequest,
+    onSuccess: () => {
+      // invalidate the user query here to refetch the updated data
+      toast.success("Follow request sent");
+      queryClient.invalidateQueries(["user", user.username]);
+    },
+    onError: (err) => {
+      toast.error("Error sending follow request");
+    },
+  });
+
+  const handleFollowClick = () => {
+    mutation.mutate({ recieverId: user.id });
+  };
 
 
   return (
@@ -28,7 +48,8 @@ function ProfileHeader({ user }) {
         {isOwnProfile ? 
         <button className='h-10 bg-violet-500 hover:bg-violet-600 text-white px-3 py-1 rounded-lg'>Edit Profile</button>
         :
-        <button className='h-10 bg-violet-500 hover:bg-violet-600 text-white px-3 py-1 rounded-lg'>Follow</button>}
+        <button onClick={handleFollowClick} className={`h-10 ${user.followStatus === "FOLLOWING" ? 'bg-gray-500 hover:bg-red-600' : 'bg-violet-500 hover:bg-violet-600'} text-white px-3 py-1 rounded-lg`}>   {user.followStatus === "FOLLOWING" ? "Following" : user.followStatus === "REQUESTED" ? "Requested" : "Follow"} </button>
+        }
       </div>
 
       <p className="text-gray-400 px-8">{user.status ?? "No status available"}</p>
