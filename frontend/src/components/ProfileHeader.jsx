@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useAuth } from "./context/AuthContext";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import avatar from "../assets/avatars/avatar.png";
-import { createRequest } from '../api/follow';
+import { createRequest, deleteFollow } from '../api/follow';
 import toast from "react-hot-toast";
 
 function ProfileHeader({ user }) {
@@ -10,20 +10,38 @@ function ProfileHeader({ user }) {
   const queryClient = useQueryClient();
   const isOwnProfile = user?.username === authUser?.username;
 
-  const mutation = useMutation({
-    mutationFn: createRequest,
-    onSuccess: () => {
-      // invalidate the user query here to refetch the updated data
-      toast.success("Follow request sent");
-      queryClient.invalidateQueries(["user", user.username]);
-    },
-    onError: (err) => {
-      toast.error("Error sending follow request");
-    },
-  });
+const mutation = useMutation({
+  mutationFn: ({ action, receiverId }) => {
+    if (action === "follow") {
+      return createRequest(receiverId);
+    }
 
-  const handleFollowClick = () => {
-    mutation.mutate({ recieverId: user.id });
+    if (action === "unfollow") {
+      return deleteFollow(receiverId);
+    }
+
+    throw new Error("Invalid action");
+  },
+
+  onSuccess: (_, variables) => {
+    const { action } = variables;
+
+    toast.success(
+      action === "follow"
+        ? "Follow request sent"
+        : "Unfollowed successfully"
+    );
+
+    queryClient.invalidateQueries({ queryKey: ["user", user.username] });
+  },
+
+  onError: () => {
+    toast.error("Error processing request");
+  },
+});
+
+  const handleFollowClick = (action) => {
+    mutation.mutate({action, receiverId: user.id});
   };
 
 
@@ -48,7 +66,7 @@ function ProfileHeader({ user }) {
         {isOwnProfile ? 
         <button className='h-10 bg-violet-500 hover:bg-violet-600 text-white px-3 py-1 rounded-lg'>Edit Profile</button>
         :
-        <button onClick={handleFollowClick} className={`h-10 ${user.followStatus === "FOLLOWING" ? 'bg-gray-500 hover:bg-red-600' : 'bg-violet-500 hover:bg-violet-600'} text-white px-3 py-1 rounded-lg`}>   {user.followStatus === "FOLLOWING" ? "Following" : user.followStatus === "REQUESTED" ? "Requested" : "Follow"} </button>
+        <button onClick={user.followStatus === "FOLLOWING"? () => handleFollowClick("unfollow") : () => handleFollowClick("follow")} className={`h-10 ${user.followStatus === "FOLLOWING" ? 'bg-gray-500 hover:bg-red-600' : 'bg-violet-500 hover:bg-violet-600'} text-white px-3 py-1 rounded-lg`}>   {user.followStatus === "FOLLOWING" ? "Following" : user.followStatus === "REQUESTED" ? "Requested" : "Follow"} </button>
         }
       </div>
 

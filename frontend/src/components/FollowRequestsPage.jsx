@@ -6,7 +6,7 @@ import EmptyState from "./EmptyState";
 import { useQuery } from "@tanstack/react-query";
 import {
   getFollowRequestsQueryOptions,
-  getFollowingQueryOptions,
+  getFollowersQueryOptions,
 } from "../queryOptions/userQueryOptions";
 import Spinner from "./Spinner";
 
@@ -24,7 +24,7 @@ function FollowRequestsPage() {
     data: following,
     isLoading: isLoadingFollowing,
     isError: isErrorFollowing,
-  } = useQuery(getFollowingQueryOptions(user.id));
+  } = useQuery(getFollowersQueryOptions(user.id));
 
   // Combine and normalize
   const combined = useMemo(() => {
@@ -71,7 +71,7 @@ function FollowRequestsPage() {
   }
 
   return (
-    <div className="h-screen w-full flex flex-col items-center px-6 pt-6 bg-gray-900 text-white overflow-auto">
+    <div className="h-screen w-full flex flex-col items-center px-6 pt-6 text-white overflow-auto">
       <h1 className="text-3xl font-bold mb-4">Follow Requests</h1>
 
       <div className="w-full max-w-2xl bg-gray-800 border border-gray-700 rounded-xl shadow-lg overflow-hidden">
