@@ -30,3 +30,27 @@ export function getFollowers(userId) {
     headers: { "Content-Type": "application/json" },
   });
 }
+
+export async function getUsers ({ page = 1, limit = 20, search }) {
+  const params = new URLSearchParams();
+  if (search !== undefined) params.append("search", search);
+
+  params.append("page", page);
+  params.append("limit", limit);
+
+  const res = await apiClient(`/users?${params.toString()}`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+  });
+
+  if (!res.success) {
+    throw new Error(res.message || "Failed to fetch users");
+  }
+
+  const { users, totalPages } = res.data;
+
+  return {
+    items: users ?? [],
+    nextPage: page < totalPages ? page + 1 : undefined,
+  };
+}

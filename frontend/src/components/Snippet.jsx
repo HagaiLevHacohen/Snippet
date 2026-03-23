@@ -14,7 +14,7 @@ function Snippet({ item, queryKey, clickable, onClick }) {
     mutationFn: toggleLike,
 
     onMutate: async (postId) => { // runs before the API call
-      await queryClient.cancelQueries({ queryKey }); // cancel any outgoing refetches (so they don't overwrite our optimistic update)
+      await queryClient.cancelQueries({ queryKey: ['posts'] }); // cancel any outgoing refetches (so they don't overwrite our optimistic update)
 
       const previousData = queryClient.getQueryData(queryKey); // snapshot the previous value
 
@@ -68,7 +68,7 @@ function Snippet({ item, queryKey, clickable, onClick }) {
     },
 
     onSettled: () => { // always refetch after error or success:
-      queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
     },
   });
 

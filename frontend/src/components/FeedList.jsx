@@ -1,5 +1,6 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { getPosts } from '../api/post';
+import { getUsers } from '../api/user';
 import { useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { getComments } from '../api/comment';
@@ -7,8 +8,9 @@ import { getLikes } from '../api/like';
 import Spinner from './Spinner';
 import Snippet from './Snippet';
 import Comment from './Comment';
+import User from './User';
 
-export default function FeedList({ activeTab, user }) {
+export default function FeedList({ activeTab, user, search }) {
   const observerRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation(); // current route info
@@ -19,18 +21,49 @@ export default function FeedList({ activeTab, user }) {
     });
   };
 
+  const getQueryKey = () => {
+    switch (activeTab) {
+      case "posts":
+        return ["posts", { userId: user.id }];
+
+      case "comments":
+        return ["comments", { userId: user.id }];
+
+      case "likes":
+        return ["likes", { userId: user.id }];
+
+      case "followingPosts":
+        return ["posts", { section: "followingPosts" }];
+
+      case "recent":
+        return ["posts", { section: "recent" }];
+
+      case "searchPosts":
+        return ["posts", { search }];
+
+      case "searchUsers":
+        return ["users", { search }];
+
+      default:
+        return ["feed"];
+    }
+  };
+
+  const queryKey = getQueryKey();
 
   const fetcher = ({ pageParam = 1 }) => {
     if (activeTab === 'posts') return getPosts({ userId: user.id, page: pageParam });
     if (activeTab === 'comments') return getComments({ userId: user.id, page: pageParam });
     if (activeTab === 'likes') return getLikes({ userId: user.id, page: pageParam });
     if (activeTab === 'followingPosts') return getPosts({ section: 'followingPosts', page: pageParam });
-    return getPosts({ page: pageParam }); // default to posts for recent
+    if (activeTab === 'recent') return getPosts({ page: pageParam });
+    if (activeTab === 'searchPosts') return getPosts({ page: pageParam, search });
+    if (activeTab === 'searchUsers') return getUsers({ page: pageParam, search });
 
   };
 
   const {data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading} = useInfiniteQuery({
-    queryKey: [activeTab, user.id],
+    queryKey: queryKey,
     queryFn: fetcher,
     getNextPageParam: (lastPage) => lastPage.nextPage ?? undefined,
     keepPreviousData: true,
@@ -62,7 +95,7 @@ export default function FeedList({ activeTab, user }) {
     <div className='flex flex-col'>
       { activeTab === 'posts' && 
       data.pages.map(page =>
-        page.items.map(item => <Snippet key={item.id} item={item} queryKey={[activeTab, user.id]} clickable onClick={() => openPost(item.id)} />)
+        page.items.map(item => <Snippet key={item.id} item={item} queryKey={queryKey} clickable onClick={() => openPost(item.id)} />)
       )
       }
       { activeTab === 'comments' && 
@@ -72,17 +105,27 @@ export default function FeedList({ activeTab, user }) {
       }
       { activeTab === 'likes' && 
       data.pages.map(page =>
-        page.items.map(item => <Snippet key={item.id} item={item} queryKey={[activeTab, user.id]} clickable onClick={() => openPost(item.id)} />)
+        page.items.map(item => <Snippet key={item.id} item={item} queryKey={queryKey} clickable onClick={() => openPost(item.id)} />)
       )
       }
       { activeTab === 'followingPosts' && 
       data.pages.map(page =>
-        page.items.map(item => <Snippet key={item.id} item={item} queryKey={[activeTab, user.id]} clickable onClick={() => openPost(item.id)} />)
+        page.items.map(item => <Snippet key={item.id} item={item} queryKey={queryKey} clickable onClick={() => openPost(item.id)} />)
       )
       }
       { activeTab === 'recent' && 
       data.pages.map(page =>
-        page.items.map(item => <Snippet key={item.id} item={item} queryKey={[activeTab, user.id]} clickable onClick={() => openPost(item.id)} />)
+        page.items.map(item => <Snippet key={item.id} item={item} queryKey={queryKey} clickable onClick={() => openPost(item.id)} />)
+      )
+      }
+      { activeTab === 'searchPosts' && 
+      data.pages.map(page =>
+        page.items.map(item => <Snippet key={item.id} item={item} queryKey={queryKey} clickable onClick={() => openPost(item.id)} />)
+      )
+      }
+      { activeTab === 'searchUsers' && 
+      data.pages.map(page =>
+        page.items.map(item => <User key={item.id} item={item} queryKey={queryKey} />)
       )
       }
       {/* Sentinel + Spinner */}

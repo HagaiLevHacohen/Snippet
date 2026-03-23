@@ -22,7 +22,7 @@ function CommentForm({ postId }) {
       setErrors({});
 
       queryClient.invalidateQueries({ queryKey: ['post', postId] });
-      queryClient.invalidateQueries({ queryKey: ['comments', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['comments', {userId: user?.id}] });
 
     },
     onError: (err) => {
