@@ -5,6 +5,102 @@ const { prisma } = require("../lib/prisma");
 const { sendSuccess, sendError } = require("../utils/response");
 
 
+const getUsers = async (req, res, next) => {
+  try {
+    const search = req.query.search;
+    const page = Math.max(Number(req.query.page) || 1, 1);
+    const limit = Math.min(Number(req.query.limit) || 20, 100);
+    const skip = (page - 1) * limit;    
+
+    let where = {};
+
+    if (search) {
+      where = {
+        OR: [
+          {
+            name: {
+              contains: search,
+              mode: 'insensitive',
+            },
+          },
+          {
+            username: {
+              contains: search,
+              mode: 'insensitive',
+            },
+          },
+        ],
+      };
+    }
+
+    // Total count for pagination
+    const totalCount = await prisma.user.count({ where });
+    const totalPages = Math.max(Math.ceil(totalCount / limit), 1);
+
+    const users = await prisma.user.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      take: limit,
+      skip,
+      select: {
+        id: true,
+        username: true,
+        name: true,
+        avatarUrl: true,
+        status: true,
+        createdAt: true,
+        _count: {
+          select: {
+            posts: true,
+            followers: true,
+            following: true,
+            likes: true,
+          },
+        },
+        followers: {
+          where: { followerId: req.userId },
+          select: { followerId: true },
+        },
+        incomingRequests: {
+          where: { outgoingRequestId: req.userId },
+          select: { status: true },
+        },
+      },
+    });
+
+    const result = users.map(user => {
+      let followStatus = "NONE";
+
+      if (user.followers.length > 0) {
+        followStatus = "FOLLOWING";
+      } else if (
+        user.incomingRequests.some(r => r.status === "PENDING")
+      ) {
+        followStatus = "REQUESTED";
+      }
+
+      return {
+        ...user,
+        followStatus,
+      };
+    });
+
+    sendSuccess(
+      res,
+      {
+        users: result,
+        page,
+        totalPages,
+        totalCount,
+      },
+      "Users retrieved successfully"
+    );
+  } catch (err) {
+    next(err);
+  }
+};
+
+
 
 const getUserById = async (req, res, next) => {
   try {
@@ -382,4 +478,4 @@ const getUserComments = async (req, res, next) => {
 
 
 
-module.exports = { getUserByUsername, getUserById, getFollowers, getFollowRequests, getFollowing, getUserLikes, getUserComments, validateUserUpdate, updateUser};
+module.exports = { getUsers, getUserByUsername, getUserById, getFollowers, getFollowRequests, getFollowing, getUserLikes, getUserComments, validateUserUpdate, updateUser};
