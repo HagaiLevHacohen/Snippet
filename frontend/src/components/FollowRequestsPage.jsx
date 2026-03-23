@@ -21,21 +21,24 @@ function FollowRequestsPage() {
   } = useQuery(getFollowRequestsQueryOptions());
 
   const {
-    data: following,
-    isLoading: isLoadingFollowing,
-    isError: isErrorFollowing,
+    data: followers,
+    isLoading: isLoadingFollowers,
+    isError: isErrorFollowers,
   } = useQuery(getFollowersQueryOptions(user.id));
 
-  // Combine and normalize
+  // Combine requests + accepted (followers)
   const combined = useMemo(() => {
+    const requestData = requests?.data || [];
+    const followerData = followers?.data || [];
+
     return [
-      ...(requests?.data || []),
-      ...(following?.data || []).map((u) => ({
+      ...requestData,
+      ...followerData.map((u) => ({
         ...u,
         status: "ACCEPTED",
       })),
     ];
-  }, [requests, following]);
+  }, [requests, followers]);
 
   // Counts for tabs
   const counts = useMemo(() => {
@@ -46,23 +49,23 @@ function FollowRequestsPage() {
     };
   }, [combined]);
 
-  // Filter by tab
+  // Filter by active tab
   const filtered = useMemo(() => {
-    if (activeTab === "pending") {
-      return combined.filter((u) => u.status === "PENDING");
+    switch (activeTab) {
+      case "pending":
+        return combined.filter((u) => u.status === "PENDING");
+      case "accepted":
+        return combined.filter((u) => u.status === "ACCEPTED");
+      case "rejected":
+        return combined.filter((u) => u.status === "REJECTED");
+      default:
+        return combined;
     }
-    if (activeTab === "accepted") {
-      return combined.filter((u) => u.status === "ACCEPTED");
-    }
-    if (activeTab === "rejected") {
-      return combined.filter((u) => u.status === "REJECTED");
-    }
-    return combined;
   }, [combined, activeTab]);
 
-  if (isLoadingRequests || isLoadingFollowing) return <Spinner />;
+  if (isLoadingRequests || isLoadingFollowers) return <Spinner />;
 
-  if (isErrorRequests || isErrorFollowing) {
+  if (isErrorRequests || isErrorFollowers) {
     return (
       <div className="h-screen flex items-center justify-center text-gray-400">
         Something went wrong
@@ -75,7 +78,11 @@ function FollowRequestsPage() {
       <h1 className="text-3xl font-bold mb-4">Follow Requests</h1>
 
       <div className="w-full max-w-2xl bg-gray-800 border border-gray-700 rounded-xl shadow-lg overflow-hidden">
-        <RequestTabs activeTab={activeTab} setActiveTab={setActiveTab} counts={counts} />
+        <RequestTabs
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          counts={counts}
+        />
 
         <div className="flex flex-col divide-y divide-gray-700">
           {filtered.length === 0 ? (

@@ -110,7 +110,7 @@ function Request({ sender, page }) {
           <button
             className="px-3 py-1 text-sm rounded-md bg-gray-700 text-gray-300 cursor-default"
           >
-            Following
+            Follower
           </button>
         )}
 

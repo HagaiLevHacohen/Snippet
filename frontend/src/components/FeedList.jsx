@@ -24,7 +24,7 @@ export default function FeedList({ activeTab, user }) {
     if (activeTab === 'posts') return getPosts({ userId: user.id, page: pageParam });
     if (activeTab === 'comments') return getComments({ userId: user.id, page: pageParam });
     if (activeTab === 'likes') return getLikes({ userId: user.id, page: pageParam });
-    if (activeTab === 'following') return getPosts({ section: 'following', page: pageParam });
+    if (activeTab === 'followingPosts') return getPosts({ section: 'followingPosts', page: pageParam });
     return getPosts({ page: pageParam }); // default to posts for recent
 
   };
@@ -75,7 +75,7 @@ export default function FeedList({ activeTab, user }) {
         page.items.map(item => <Snippet key={item.id} item={item} queryKey={[activeTab, user.id]} clickable onClick={() => openPost(item.id)} />)
       )
       }
-      { activeTab === 'following' && 
+      { activeTab === 'followingPosts' && 
       data.pages.map(page =>
         page.items.map(item => <Snippet key={item.id} item={item} queryKey={[activeTab, user.id]} clickable onClick={() => openPost(item.id)} />)
       )

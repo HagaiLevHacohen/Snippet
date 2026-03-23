@@ -11,7 +11,7 @@ function Tabs({ activeTab, setActiveTab, page }) {
             </> :
             <>
             <div onClick={() => setActiveTab("recent")} className={`flex-1 ${activeTab === "recent" ? 'bg-indigo-500 ' : 'hover:bg-gray-600'} rounded-tl-md flex border-r border-gray-700 justify-center items-center transition-colors duration-300`}>Recent</div>
-            <div onClick={() => setActiveTab("following")} className={`flex-1 ${activeTab === "following" ? 'bg-indigo-500' : 'hover:bg-gray-600'} rounded-tr-md flex border-r border-gray-700 justify-center items-center transition-colors duration-300`}>Following</div>
+            <div onClick={() => setActiveTab("followingPosts")} className={`flex-1 ${activeTab === "followingPosts" ? 'bg-indigo-500' : 'hover:bg-gray-600'} rounded-tr-md flex border-r border-gray-700 justify-center items-center transition-colors duration-300`}>Following Posts</div>
             </>
             } 
         </div>
