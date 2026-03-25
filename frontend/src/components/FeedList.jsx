@@ -55,7 +55,7 @@ export default function FeedList({ activeTab, user, search }) {
     if (activeTab === 'posts') return getPosts({ userId: user.id, page: pageParam });
     if (activeTab === 'comments') return getComments({ userId: user.id, page: pageParam });
     if (activeTab === 'likes') return getLikes({ userId: user.id, page: pageParam });
-    if (activeTab === 'followingPosts') return getPosts({ section: 'followingPosts', page: pageParam });
+    if (activeTab === 'followingPosts') return getPosts({ section: 'following', page: pageParam });
     if (activeTab === 'recent') return getPosts({ page: pageParam });
     if (activeTab === 'searchPosts') return getPosts({ page: pageParam, search });
     if (activeTab === 'searchUsers') return getUsers({ page: pageParam, search });
