@@ -27,7 +27,6 @@ function Sidebar() {
           <SidebarItem title="Feed" icon={houseIcon} to="/feed" selected={page === "feed"} onClick={() => setPage("feed")} />
           <SidebarItem title="Profile" icon={userIcon} to={`/profile/${user?.username}`} selected={page === "profile"} onClick={() => setPage("profile")} />
           <SidebarItem title="Search" icon={searchIcon} to="/search" selected={page === "search"} onClick={() => setPage("search")} />
-          <SidebarItem title="Explore" icon={compassIcon} to="/explore" selected={page === "explore"} onClick={() => setPage("explore")} />
           <SidebarItem title="Follow Requests" icon={letter} to="/requests" selected={page === "requests"} onClick={() => setPage("requests")} />
         </div>
 
