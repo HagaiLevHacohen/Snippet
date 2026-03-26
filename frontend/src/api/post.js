@@ -1,13 +1,33 @@
 import { apiClient } from "./client.js";
 
 
-export function createPost(formData) {
+export async function createPost({ content, imageFile }) {
+  let imageUrl;
+
+  // Step 1: upload image if a file is selected
+  if (imageFile) {
+    const formData = new FormData();
+    formData.append("file", imageFile);
+
+    const uploadRes = await apiClient("/upload/post-image", {
+      method: "POST",
+      body: formData,
+    });
+
+    imageUrl = uploadRes.url;
+  }
+
+  // Step 2: create post
   return apiClient("/posts", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(formData),
+    body: JSON.stringify({
+      content: content || undefined,
+      ...(imageUrl && { imageUrl }),
+    }),
   });
 }
+
 
 export async function getPost(postId) {
   const res = await apiClient(`/posts/${postId}`, {

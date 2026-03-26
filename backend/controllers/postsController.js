@@ -118,7 +118,7 @@ const getPost = async (req, res, next) => {
           include: {
               user: { select: { id: true, username: true, name: true, avatarUrl: true } },
           },
-          orderBy: { createdAt: "asc" },
+          orderBy: { createdAt: "desc" },
         },
         _count: {
         select: { likes: true, comments: true },

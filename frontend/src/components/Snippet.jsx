@@ -94,6 +94,17 @@ function Snippet({ item, queryKey, clickable, onClick }) {
         <span className="text-gray-400 text-sm ml-auto">{format(item.createdAt)}</span>
       </div>
 
+      {/* Snippet image */}
+      {item.imageUrl && (
+        <div className="mt-4 overflow-hidden rounded-lg">
+          <img
+            src={item.imageUrl}
+            alt="Snippet"
+            className="w-full max-h-125 object-cover"
+          />
+        </div>
+      )}
+
       {/* Snippet text */}
       <p className="text-lg pl-4 whitespace-pre-wrap wrap-break-word break-all">
         {item.content}

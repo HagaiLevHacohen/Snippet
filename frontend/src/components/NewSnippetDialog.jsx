@@ -7,6 +7,8 @@ import toast from "react-hot-toast";
 export default function NewSnippetDialog({ onClose }) {
   const { user } = useAuth();
   const [content, setContent] = useState("");
+  const [imageFile, setImageFile] = useState(null); // file object
+  const [imagePreview, setImagePreview] = useState(""); // preview URL
   const [errors, setErrors] = useState({});
   const queryClient = useQueryClient();
 
@@ -36,7 +38,7 @@ export default function NewSnippetDialog({ onClose }) {
   const validateForm = () => {
     const newErrors = {};
     const trimmedContent = content.trim();
-    if (!trimmedContent) newErrors.content = "Content is required";
+    if (!trimmedContent && !imageFile) newErrors.content = "Post must have either content or image";
     else if (trimmedContent.length > 500) newErrors.content = "Content must be at most 500 characters";
     return newErrors;
   }
@@ -47,8 +49,19 @@ export default function NewSnippetDialog({ onClose }) {
     setErrors(validationErrors);
 
     if (Object.keys(validationErrors).length === 0) {
-      mutation.mutate({content}); // imageUrl is required by API but we don't support it in UI, so we just send content and let backend handle the rest
+      mutation.mutate({content, imageFile}); 
     }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setImageFile(file);
+
+    // preview
+    const previewUrl = URL.createObjectURL(file);
+    setImagePreview(previewUrl);
   };
 
   return (
@@ -62,6 +75,12 @@ export default function NewSnippetDialog({ onClose }) {
       {/* Dialog card */}
       <div className="relative bg-gray-800 rounded-xl shadow-2xl w-130 max-w-[90%] p-6 flex flex-col animate-fade-in z-50">
         <h2 className="text-2xl font-bold text-white mb-4">New Snippet</h2>
+        {imagePreview && (
+          <div className="mb-4">
+            <img src={imagePreview} alt="Preview" className="w-full rounded-lg" />
+          </div>
+        )}
+
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
@@ -74,6 +93,12 @@ export default function NewSnippetDialog({ onClose }) {
           </p>
         ))}
         <div className="flex justify-end gap-3 mt-4">
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="w-full text-sm mr-auto text-zinc-400 file:bg-indigo-600 file:text-white file:px-3 file:py-2 file:rounded-lg"
+          />
           <button
             className="px-4 py-2 bg-gray-600 rounded-lg hover:bg-gray-700 text-white"
             onClick={onClose}
@@ -82,7 +107,7 @@ export default function NewSnippetDialog({ onClose }) {
           </button>
           <button
             onClick={handlePost}
-            disabled={!content.trim()}
+            disabled={!content.trim() && !imageFile}
             className="px-4 py-2 bg-violet-500 rounded-lg hover:bg-violet-600 text-white disabled:opacity-50 disabled:bg-gray-600 disabled:cursor-not-allowed"
           >
             Post

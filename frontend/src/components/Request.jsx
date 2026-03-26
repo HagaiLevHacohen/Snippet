@@ -62,7 +62,7 @@ function Request({ sender, page }) {
       {/* LEFT: Avatar + Info */}
       <div className="flex items-center gap-3">
         <img
-          src={user.avatarUrl ?? avatar}
+          src={sender.avatarUrl ?? avatar}
           alt={sender.username}
           className="w-11 h-11 rounded-full object-cover border border-gray-700"
         />
