@@ -9,6 +9,7 @@ import Search from "./components/Search.jsx";
 import Profile from "./components/Profile.jsx";
 import Post from "./components/Post.jsx";
 import FollowRequestsPage from "./components/FollowRequestsPage.jsx";
+import Settings from "./components/Settings.jsx";
 
 const routes = [
   { path: "/", element: <Home /> },
@@ -26,7 +27,8 @@ const routes = [
       { path: "search", element: <Search /> },
       { path: "profile/:username", element: <Profile /> },
       { path: "posts/:postId", element: <Post /> },
-      { path: "requests", element: <FollowRequestsPage /> }
+      { path: "requests", element: <FollowRequestsPage /> },
+      { path: "settings", element: <Settings /> },
     ]
   },
 

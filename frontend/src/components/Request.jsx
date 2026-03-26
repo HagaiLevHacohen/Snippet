@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useAuth } from "./context/AuthContext";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { acceptRequest, rejectRequest } from "../api/follow";
+import avatar from "../assets/avatars/avatar.png";
 import toast from "react-hot-toast";
 
 function Request({ sender, page }) {
@@ -61,7 +62,7 @@ function Request({ sender, page }) {
       {/* LEFT: Avatar + Info */}
       <div className="flex items-center gap-3">
         <img
-          src={sender.avatarUrl}
+          src={user.avatarUrl ?? avatar}
           alt={sender.username}
           className="w-11 h-11 rounded-full object-cover border border-gray-700"
         />

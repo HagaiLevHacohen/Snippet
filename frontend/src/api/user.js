@@ -54,3 +54,34 @@ export async function getUsers ({ page = 1, limit = 20, search }) {
     nextPage: page < totalPages ? page + 1 : undefined,
   };
 }
+
+export async function updateUser({ id, name, status, avatarFile }) {
+  let avatarUrl;
+
+  // Step 1: upload image if a file is selected
+  if (avatarFile) {
+    const formData = new FormData();
+    formData.append("file", avatarFile);
+
+    const uploadRes = await apiClient("/upload/avatar", {
+      method: "POST",
+      body: formData,
+    });
+    avatarUrl = uploadRes.url;
+  }
+
+  // Step 2: update user
+  const res = await apiClient(`/users/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      name: name || undefined,
+      status: status || undefined,
+      ...(avatarUrl && { avatarUrl }),
+    }),
+  });
+  
+  return res;
+}

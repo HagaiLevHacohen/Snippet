@@ -17,6 +17,7 @@ const postsRouter = require("./routes/postsRouter");
 const commentsRouter = require("./routes/commentsRouter");
 const likesRouter = require("./routes/likesRouter");
 const followRouter = require("./routes/followRouter");
+const uploadRouter = require("./routes/uploadRouter");
 
 
 // app setup
@@ -50,7 +51,7 @@ app.use("/posts", postsRouter);
 app.use("/posts/:id/like", likesRouter);
 app.use("/comments", commentsRouter);
 app.use("/follow", followRouter);
-
+app.use("/upload", uploadRouter);
 
 
 // ------- Error handler -------
