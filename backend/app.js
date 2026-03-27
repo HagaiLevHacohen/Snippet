@@ -8,6 +8,7 @@ const configurePassport = require("./config/passport");
 const errorHandler = require("./errors/errorHandler");
 const cors = require('cors');
 const http = require("http");
+const initSocket = require("./sockets");
 
 
 // Import Routers
@@ -19,6 +20,7 @@ const commentsRouter = require("./routes/commentsRouter");
 const likesRouter = require("./routes/likesRouter");
 const followRouter = require("./routes/followRouter");
 const uploadRouter = require("./routes/uploadRouter");
+const conversationsRouter = require("./routes/conversationsRouter");
 
 
 // app setup
@@ -53,7 +55,7 @@ app.use("/posts/:id/like", likesRouter);
 app.use("/comments", commentsRouter);
 app.use("/follow", followRouter);
 app.use("/upload", uploadRouter);
-
+app.use("/conversations", conversationsRouter);
 
 // ------- Error handler -------
 app.use(errorHandler);
@@ -62,6 +64,10 @@ app.use(errorHandler);
 
 // ---- Starting the server -----
 const server = http.createServer(app);
+
+// --- Creating WebSocket server and registering handlers ---
+const io = initSocket(server);
+
 
 // ---- Start server ----
 if (process.env.NODE_ENV !== "test") {
