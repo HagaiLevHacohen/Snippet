@@ -7,6 +7,7 @@ const passport = require("passport");
 const configurePassport = require("./config/passport");
 const errorHandler = require("./errors/errorHandler");
 const cors = require('cors');
+const http = require("http");
 
 
 // Import Routers
@@ -60,11 +61,15 @@ app.use(errorHandler);
 
 
 // ---- Starting the server -----
+const server = http.createServer(app);
+
+// ---- Start server ----
 if (process.env.NODE_ENV !== "test") {
   const port = process.env.PORT || 3000;
-  app.listen(port, () => {
-    console.log(`App is listening on port ${port}`);
+
+  server.listen(port, () => {
+    console.log(`Server running on port ${port}`);
   });
 }
 
-module.exports = app;
+module.exports = { app, server };

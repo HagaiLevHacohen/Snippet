@@ -33,6 +33,11 @@ model User {
   posts    Post[]
   likes    Like[]
   comments Comment[]
+
+  conversationsAsUser1 Conversation[] @relation("User1Conversations")
+  conversationsAsUser2 Conversation[] @relation("User2Conversations")
+
+  sentMessages Message[]
 }
 
 model UserFollow {
@@ -98,4 +103,45 @@ model Comment {
 
   post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
   postId Int
+}
+
+model Conversation {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // participants
+  user1Id Int
+  user2Id Int
+
+  lastMessageId Int?
+  lastMessage   Message? @relation("LastMessage", fields: [lastMessageId], references: [id])
+
+  user1 User @relation("User1Conversations", fields: [user1Id], references: [id], onDelete: Cascade)
+  user2 User @relation("User2Conversations", fields: [user2Id], references: [id], onDelete: Cascade)
+
+  messages Message[]
+
+  @@unique([user1Id, user2Id]) // ensures only one conversation per pair
+}
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  content   String
+  createdAt DateTime @default(now())
+
+  senderId       Int
+  conversationId Int
+
+  sender       User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  // read tracking
+  isRead Boolean @default(false)
+
+  conversationLastMessage Conversation[] @relation("LastMessage")
+
+  imageUrl String?
+
+  @@index([conversationId, createdAt])
 }
