@@ -1,10 +1,10 @@
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import DisplaySnippet from "./DisplaySnippet";
-import profile1 from "../assets/fake_profile_1.jpg";
-import profile2 from "../assets/fake_profile_2.jpg";
-import profile3 from "../assets/fake_profile_3.jpg";
-import profile4 from "../assets/fake_profile_4.jpg";
+import profile1 from "../assets/display/fake_profile_1.jpg";
+import profile2 from "../assets/display/fake_profile_2.jpg";
+import profile3 from "../assets/display/fake_profile_3.jpg";
+import profile4 from "../assets/display/fake_profile_4.jpg";
 
 function Home() {
   const { isLoggedIn } = useAuth(); // check auth state
