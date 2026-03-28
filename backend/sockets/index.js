@@ -1,6 +1,7 @@
 const { Server } = require("socket.io");
 const registerConnectionHandler = require("./handlers/connectionHandler");
 const authSocket = require("./middleware/authSocket");
+const autoJoin = require("./handlers/conversationHandler");
 
 function initSocket(server) {
   const io = new Server(server, {
@@ -13,7 +14,8 @@ function initSocket(server) {
   io.use(authSocket);
   
   // Register connection handler
-  io.on("connection", (socket) => {
+  io.on("connection", async (socket) => {
+    await autoJoin(socket);
     registerConnectionHandler(io, socket);
   });
 

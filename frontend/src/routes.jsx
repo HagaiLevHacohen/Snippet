@@ -10,6 +10,7 @@ import Profile from "./components/Profile.jsx";
 import Post from "./components/Post.jsx";
 import FollowRequestsPage from "./components/FollowRequestsPage.jsx";
 import Settings from "./components/Settings.jsx";
+import MessagePage from "./components/MessagePage.jsx";
 
 const routes = [
   { path: "/", element: <Home /> },
@@ -28,6 +29,7 @@ const routes = [
       { path: "profile/:username", element: <Profile /> },
       { path: "posts/:postId", element: <Post /> },
       { path: "requests", element: <FollowRequestsPage /> },
+      { path: "messages", element: <MessagePage /> },
       { path: "settings", element: <Settings /> },
     ]
   },
