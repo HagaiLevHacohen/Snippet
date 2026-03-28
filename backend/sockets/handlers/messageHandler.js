@@ -26,8 +26,8 @@ function registerMessageHandler(io, socket) {
       }
 
       // 1. Save to DB
-      await prisma.$transaction(async (tx) => {
-        const message = await tx.message.create({
+      const message = await prisma.$transaction(async (tx) => {
+        const createdMessage = await tx.message.create({
           data: {
             conversationId,
             senderId: userId,
@@ -38,8 +38,10 @@ function registerMessageHandler(io, socket) {
 
         await tx.conversation.update({
           where: { id: conversationId },
-          data: { updatedAt: new Date(), lastMessageId: message.id },
+          data: { updatedAt: new Date(), lastMessageId: createdMessage.id },
         });
+
+        return createdMessage; // ✅ return it
       });
 
       // 2. Emit to room
