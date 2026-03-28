@@ -1,30 +1,54 @@
 const { prisma } = require("../../lib/prisma");
 
 function registerConversationHandler(io, socket) {
-    socket.on("join_conversation", async (conversationId) => {
-    const userId = socket.userId;
+    socket.on("join_conversations", async () => {
+        try {
+            const userId = socket.userId;
 
-    const conversation = await prisma.conversation.findFirst({
-        where: {
-        id: conversationId,
-        OR: [
-            { user1Id: userId },
-            { user2Id: userId }
-        ]
+            const conversations = await prisma.conversation.findMany({
+            where: {
+                OR: [
+                { user1Id: userId },
+                { user2Id: userId }
+                ]
+            },
+            select: { id: true }
+            });
+
+            conversations.forEach(c => {
+            socket.join(`conversation:${c.id}`);
+            });
+            
+            console.log(`User ${socket.userId} joined all their conversations`);
+        } catch (err) {
+            console.error(err);
+            socket.emit("error", "Failed to join conversations");
         }
     });
 
-    if (!conversation) {
-        return socket.emit("error", "Unauthorized");
+  socket.on("leave_conversations", async () => {
+    try {
+        const userId = socket.userId;
+
+        const conversations = await prisma.conversation.findMany({
+        where: {
+            OR: [
+            { user1Id: userId },
+            { user2Id: userId }
+            ]
+        },
+        select: { id: true }
+        });
+
+        conversations.forEach(c => {
+        socket.leave(`conversation:${c.id}`);
+        });
+
+        console.log(`User ${socket.userId} left all their conversations`);
+    } catch (err) {
+        console.error(err);
+        socket.emit("error", "Failed to leave conversations");
     }
-
-    socket.join(`conversation:${conversationId}`);
-    console.log(`User ${socket.userId} joined conversation ${conversationId}`);
-    });
-
-  socket.on("leave_conversation", (conversationId) => {
-    socket.leave(`conversation:${conversationId}`);
-    console.log(`User ${socket.userId} left conversation ${conversationId}`);
   });
 }
 

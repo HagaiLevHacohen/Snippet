@@ -1,12 +1,13 @@
 const registerMessageHandler = require("./messageHandler");
-const registerConnectionHandler = require("./connectionHandler");
+const registerConversationHandler = require("./conversationHandler");
 
 function connectionHandler(io, socket) {
   console.log("User connected:", socket.id);
 
   // Register feature handlers
   registerMessageHandler(io, socket);
-  registerConnectionHandler(io, socket);
+  registerConversationHandler(io, socket);
+
 
   socket.on("disconnect", () => {
     console.log("User disconnected:", socket.id);
