@@ -1,3 +1,5 @@
+const { prisma } = require("../../lib/prisma");
+
 
 function registerMessageHandler(io, socket) {
   socket.on("send_message", async (data) => {
