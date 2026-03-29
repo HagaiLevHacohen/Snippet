@@ -4,13 +4,15 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import avatar from "../assets/avatars/avatar.png";
 import { createRequest, deleteFollow } from '../api/follow';
 import toast from "react-hot-toast";
+import { Link } from 'react-router-dom';
+import { createConversation } from '../api/conversation';
 
 function ProfileHeader({ user }) {
   const { user: authUser } = useAuth();
   const queryClient = useQueryClient();
   const isOwnProfile = user?.username === authUser?.username;
 
-const mutation = useMutation({
+const followMutation = useMutation({
   mutationFn: ({ action, receiverId }) => {
     if (action === "follow") {
       return createRequest(receiverId);
@@ -40,8 +42,24 @@ const mutation = useMutation({
   },
 });
 
+
+const createConversationMutation = useMutation({
+  mutationFn: ({ recipientId }) => {
+    return createConversation(recipientId);
+  },
+
+  onSuccess: () => {
+    toast.success("Conversation created successfully");
+  },
+
+  onError: () => {
+    toast.error("Error creating conversation");
+  },
+});
+
+
   const handleFollowClick = (action) => {
-    mutation.mutate({action, receiverId: user.id});
+    followMutation.mutate({action, receiverId: user.id});
   };
 
 
@@ -64,9 +82,12 @@ const mutation = useMutation({
             </div>
         </div>
         {isOwnProfile ? 
-        <button className='h-10 bg-violet-500 hover:bg-violet-600 text-white px-3 py-1 rounded-lg'>Edit Profile</button>
+        <Link to="/settings" className='h-10 bg-violet-500 hover:bg-violet-600 text-white p-2 text-center rounded-lg'>Edit Profile</Link>
         :
-        <button onClick={user.followStatus === "FOLLOWING"? () => handleFollowClick("unfollow") : () => handleFollowClick("follow")} className={`h-10 ${user.followStatus === "FOLLOWING" ? 'bg-gray-500 hover:bg-red-600' : 'bg-violet-500 hover:bg-violet-600'} text-white px-3 py-1 rounded-lg`}>   {user.followStatus === "FOLLOWING" ? "Following" : user.followStatus === "REQUESTED" ? "Requested" : "Follow"} </button>
+        <div className='flex gap-4'>
+          <button onClick={() => createConversationMutation.mutate({ recipientId: user.id })} className='h-10 bg-violet-500 hover:bg-violet-600 text-white px-3 py-1 rounded-lg'>Message</button>
+          <button onClick={user.followStatus === "FOLLOWING"? () => handleFollowClick("unfollow") : () => handleFollowClick("follow")} className={`h-10 ${user.followStatus === "FOLLOWING" ? 'bg-gray-500 hover:bg-red-600' : 'bg-violet-500 hover:bg-violet-600'} text-white px-3 py-1 rounded-lg`}>   {user.followStatus === "FOLLOWING" ? "Following" : user.followStatus === "REQUESTED" ? "Requested" : "Follow"} </button>
+        </div>
         }
       </div>
 
