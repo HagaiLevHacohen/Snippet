@@ -6,7 +6,6 @@ function connectionHandler(io, socket) {
 
   // Register feature handlers
   registerMessageHandler(io, socket);
-  registerConversationHandler(io, socket);
 
 
   socket.on("disconnect", () => {
