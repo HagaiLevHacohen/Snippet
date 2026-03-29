@@ -15,20 +15,17 @@ export function AuthProvider({ children }) {
   const user = data?.data; // extract user from response shape { success, message, data }
 
   useEffect(() => {
-    if (!token && socket.connected) {
-      socket.disconnect();
-      return;
-    } else if (!token) {
+    if (!token) {
+      if (socket.connected) socket.disconnect();
       return;
     }
 
-    // If already connected, force reconnect with new auth
-    if (socket.connected) {
-      socket.disconnect();
+    // Only reconnect if token changed or socket is disconnected
+    if (!socket.connected || socket.auth?.token !== token) {
+      if (socket.connected) socket.disconnect();
+      socket.auth = { token };
+      socket.connect();
     }
-
-    socket.auth = { token };
-    socket.connect();
   }, [token]);
 
   const login = async (newToken) => {
