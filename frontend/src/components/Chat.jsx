@@ -15,6 +15,7 @@ function Chat({ conversation }) {
   const containerRef = useRef(null);
   const [messageInput, setMessageInput] = useState("");
   const [newMessages, setNewMessages] = useState([]);
+  const [isTyping, setIsTyping] = useState(false);
 
 
   // Fetching messages logic with react-query's useInfiniteQuery
@@ -108,7 +109,6 @@ function Chat({ conversation }) {
   useEffect(() => {
     const handleMessageRead = (conversationId) => {
       if (conversationId !== conversation.id) return; // ignore messages from other conversations
-      console.log("Messages marked as read for conversation", conversationId);
       setNewMessages((prev) => prev.map(msg => ({ ...msg, isRead: true })));
     };
 
@@ -122,6 +122,21 @@ function Chat({ conversation }) {
   useEffect(() => {
     socket.emit("mark_as_read", { conversationId: conversation.id});
   }, [conversation.id, newMessages.length]);
+
+
+  useEffect(() => {
+    const handleTyping = (conversationId) => {
+      if (conversationId !== conversation.id) return; // ignore typing events from other conversations
+      setIsTyping(true);
+      setTimeout(() => setIsTyping(false), 3000); // reset typing status after 3 seconds
+    };
+
+    socket.on("typing", handleTyping);
+
+    return () => {
+      socket.off("typing", handleTyping);
+    };
+  }, [conversation.id]);
 
 
   const didInitialScroll = useRef(false);
@@ -175,6 +190,13 @@ function Chat({ conversation }) {
         {messages.map((message) => (
           <Message key={message.id} message={message} />
         ))}
+
+        {/* Typing indicator */}
+        {isTyping && (
+          <div className="text-gray-400 text-sm italic mb-2">
+            {other.name} is typing...
+          </div>
+        )}
       </div>
 
       {/* Input area */}
@@ -189,7 +211,10 @@ function Chat({ conversation }) {
             type="text"
             placeholder="Type a message..."
             value={messageInput}
-            onChange={(e) => setMessageInput(e.target.value)}
+            onChange={(e) => {
+              setMessageInput(e.target.value);
+              socket.emit("typing", { conversationId: conversation.id }); // emit typing event on input change
+            }}
             className='w-full p-2 rounded-lg bg-gray-700 text-white focus:outline-none'
           />
           <button className={`rounded-full bg-green-700 p-2 active:bg-green-600 ${messageInput ? 'opacity-100' : 'opacity-50'}`} disabled={!messageInput} onClick={sendMessageHandler}>
