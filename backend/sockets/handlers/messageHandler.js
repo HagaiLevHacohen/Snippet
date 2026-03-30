@@ -79,10 +79,7 @@ function registerMessageHandler(io, socket) {
         data: { isRead: true }
       });
 
-      io.to(`conversation:${conversationId}`).emit("messages_read", {
-        conversationId,
-        userId: socket.userId
-      });
+      socket.to(`conversation:${conversationId}`).emit("messages_read", conversationId);
     } catch (err) {
       console.error(err);
       socket.emit("error", "Failed to mark messages as read");
