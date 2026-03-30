@@ -91,9 +91,7 @@ function registerMessageHandler(io, socket) {
       // Check if user is part of the conversation (lightweight check)
       if (!socket.rooms.has(`conversation:${conversationId}`)) return;
 
-      socket.to(`conversation:${conversationId}`).emit("typing", {
-        userId: socket.userId
-      });
+      socket.to(`conversation:${conversationId}`).emit("typing", conversationId);
     } catch (err) {
       console.error(err);
       socket.emit("error", "Failed to send typing status");
