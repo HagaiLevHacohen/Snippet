@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, use } from 'react';
 import { useAuth } from './context/AuthContext';
 import avatar from "../assets/avatars/avatar.png";
 import {useInfiniteQuery } from "@tanstack/react-query";
@@ -12,8 +12,12 @@ import { socket } from '../lib/socket';
 function Chat({ conversation }) {
   const { user } = useAuth();
   const observerRef = useRef();
+  const containerRef = useRef(null);
   const [messageInput, setMessageInput] = useState("");
+  const [newMessages, setNewMessages] = useState([]);
 
+
+  // Fetching messages logic with react-query's useInfiniteQuery
   const fetcher = ({ pageParam = null }) => {
     return getMessages(conversation.id, pageParam);
   };
@@ -25,13 +29,35 @@ function Chat({ conversation }) {
     keepPreviousData: true,
   });
 
+  // Creating messages list
+  const messages = data?.pages?.flatMap(page => page.messages) || [];
+  messages.reverse(); // reverse to show newest at the bottom
+  messages.push(...newMessages); // append new messages to the end
+
+
+
+  const loadMoreMessages = async () => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const prevScrollHeight = el.scrollHeight;
+
+    await fetchNextPage(); // fetch older messages
+
+    // Wait for DOM to update
+    requestAnimationFrame(() => {
+      const newScrollHeight = el.scrollHeight;
+      el.scrollTop = newScrollHeight - prevScrollHeight; // keep viewport stable
+    });
+  };
+
   // Intersection Observer
   useEffect(() => {
     if (!hasNextPage) return;
 
     const observer = new IntersectionObserver((entries) => {
       if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) { // load more when the sentinel comes into view
-        fetchNextPage();
+        loadMoreMessages();
       }
     });
 
@@ -44,15 +70,72 @@ function Chat({ conversation }) {
     };
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
+
+  // Check if user is near the bottom of the chat
+  const isNearBottom = (el) => {
+    return el.scrollHeight - el.scrollTop - el.clientHeight < 100;
+  };
+
+  // Scroll to bottom when new messages arrive, but only if user is already near the bottom
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    if (isNearBottom(el)) {
+      el.scrollTop = el.scrollHeight;
+    }
+  }, [newMessages]);
+
+
   const sendMessageHandler = () => {
-    socket.emit("send_message", { conversationId: conversation.id, content: messageInput }, (response) => {
-      if (response.success) {
-        setMessageInput("");
-      } else {
-        toast.error("Error sending message");
-      }
-    });
+    socket.emit("send_message", { conversationId: conversation.id, content: messageInput.trim() });
+    setMessageInput("");
   }
+
+  useEffect(() => {
+    const handleNewMessage = (message) => {
+      if (message.conversationId !== conversation.id) return; // ignore messages from other conversations
+      setNewMessages((prev) => [...prev, message]);
+    };
+
+    socket.on("new_message", handleNewMessage);
+
+    return () => {
+      socket.off("new_message", handleNewMessage);
+    };
+  }, [conversation.id]);
+
+  useEffect(() => {
+    const handleMessageRead = (conversationId) => {
+      if (conversationId !== conversation.id) return; // ignore messages from other conversations
+      console.log("Messages marked as read for conversation", conversationId);
+      setNewMessages((prev) => prev.map(msg => ({ ...msg, isRead: true })));
+    };
+
+    socket.on("messages_read", handleMessageRead);
+
+    return () => {
+      socket.off("messages_read", handleMessageRead);
+    };
+  }, [conversation.id]);
+
+  useEffect(() => {
+    socket.emit("mark_as_read", { conversationId: conversation.id});
+  }, [conversation.id, newMessages.length]);
+
+
+  const didInitialScroll = useRef(false);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    if (!didInitialScroll.current && data?.pages?.length) {
+      el.scrollTop = el.scrollHeight;
+      didInitialScroll.current = true;
+    }
+  }, [data?.pages?.length]);
+
 
 
   // Returns the other participant in a conversation
@@ -77,41 +160,39 @@ function Chat({ conversation }) {
       </div>
 
       {/* Messages area */}
-      <div className='flex-1 flex flex-col p-4 overflow-auto'>
+      <div ref={containerRef} className='flex-1 flex flex-col p-4 overflow-auto'>
         {/* Sentinel + Spinner */}
         <div ref={observerRef} className="h-10 flex m-b-auto justify-center items-center">
           {isFetchingNextPage && <Spinner />}
           {!hasNextPage && (
             <p className="text-center text-gray-400 py-4">
-              No more messages
+              The beginning of the conversation
             </p>
           )}
         </div>
 
         {/* Messages */}
-        {data?.pages?.length > 0 && (
-          data.pages.map((page) =>
-            page.messages.map((message) => {
-              return (
-                <Message key={message.id} message={message} />
-              );
-            })
-          )
-        )}
+        {messages.map((message) => (
+          <Message key={message.id} message={message} />
+        ))}
       </div>
 
       {/* Input area */}
       <div className='p-4 border-t border-gray-700'>
         
         <div className='flex items-center gap-2'>
-          <input
+          <input onKeyDown={(e) => {
+              if (e.key === "Enter" && messageInput.trim()) {
+                sendMessageHandler();
+              }
+            }}
             type="text"
             placeholder="Type a message..."
             value={messageInput}
             onChange={(e) => setMessageInput(e.target.value)}
             className='w-full p-2 rounded-lg bg-gray-700 text-white focus:outline-none'
           />
-          <button className={`rounded-full bg-green-700 p-2 ${messageInput ? 'opacity-100' : 'opacity-50'}`} disabled={!messageInput} onClick={sendMessageHandler}>
+          <button className={`rounded-full bg-green-700 p-2 active:bg-green-600 ${messageInput ? 'opacity-100' : 'opacity-50'}`} disabled={!messageInput} onClick={sendMessageHandler}>
             <img src={sendIcon} alt="Send" className="w-6 h-6" />
           </button>
         </div>

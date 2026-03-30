@@ -12,11 +12,16 @@ function Message({ message }) {
             ${isOwnMessage ? 'bg-green-800 self-end' : 'bg-gray-700 self-start'}`}
         >
             <span>{message.content}</span>
-            {message.createdAt && (
+
+            <div className={`flex ${isOwnMessage ? 'justify-between' : 'justify-end'} gap-2`}>
+                { isOwnMessage &&
+                <span className="text-gray-400 text-xs mt-1 self-end">{message.isRead ? "Read" : "Sent"}</span>
+                }
                 <span className="text-gray-200 text-xs mt-1 self-end">
                 {format(new Date(message.createdAt))}
                 </span>
-            )}
+            </div>
+
         </div>
     );
 }

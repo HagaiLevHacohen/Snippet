@@ -31,7 +31,7 @@ function MessagePage() {
 
         {/* Main chat area */}
         {currentConversation ? (
-          <Chat conversation={currentConversation} />
+          <Chat key={currentConversation.id} conversation={currentConversation} />
         ) : (
           <div className="flex-5 flex items-center justify-center text-gray-400">
             Select a conversation to start chatting.
