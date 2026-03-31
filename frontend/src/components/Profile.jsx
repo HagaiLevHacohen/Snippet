@@ -17,9 +17,9 @@ function Profile() {
   if (error) return <div>Error loading profile</div>;
 
   return (
-    <div className='h-screen w-full flex flex-col items-center justify-start gap-4 px-32 pt-4 overflow-auto'>
+    <div className='h-screen w-full flex flex-col items-center justify-start py-8 px-2 gap-4 md:px-32 md:pt-4 overflow-auto'>
         <ProfileHeader user={data.data} />
-        <div className="w-7/10 min-w-75 bg-gray-800 border border-gray-700 rounded-t-md flex flex-col">
+        <div className="xl:w-7/10 xl:min-w-75 bg-gray-800 border border-gray-700 rounded-t-md flex flex-col">
           <Tabs activeTab={activeTab} setActiveTab={setActiveTab} page="profile" />
           <FeedList user={data.data} activeTab={activeTab} />
         </div>

@@ -64,9 +64,9 @@ const createConversationMutation = useMutation({
 
 
   return (
-    <div className='flex flex-col w-7/10 min-w-75 bg-gray-800 rounded-lg p-4 gap-8'>
+    <div className='flex flex-col w-full xl:w-7/10 xl:min-w-75 bg-gray-800 rounded-lg p-4 gap-8'>
 
-      <div className='flex w-full items-center justify-between'>
+      <div className='flex w-full items-center justify-between gap-10'>
         <div className="flex items-center gap-4">
             {/* Avatar */}
             <img
@@ -78,22 +78,22 @@ const createConversationMutation = useMutation({
             {/* Name + username stacked */}
             <div className="flex flex-col">
                 <h1 className="text-2xl md:text-3xl font-bold">{user.name}</h1>
-                <h2 className="text-sm md:text-lg text-gray-400">@ {user.username}</h2>
+                <h2 className="text-sm md:text-lg text-gray-400">@{user.username}</h2>
             </div>
         </div>
         {isOwnProfile ? 
-        <Link to="/settings" className='h-10 bg-violet-500 hover:bg-violet-600 text-white p-2 text-center rounded-lg'>Edit Profile</Link>
+        <Link to="/settings" className='h-10 sm:w-30 bg-violet-500 hover:bg-violet-600 text-white p-2 text-center rounded-lg'>Edit Profile</Link>
         :
-        <div className='flex gap-4'>
-          <button onClick={() => createConversationMutation.mutate({ recipientId: user.id })} className='h-10 bg-violet-500 hover:bg-violet-600 text-white px-3 py-1 rounded-lg'>Message</button>
-          <button onClick={user.followStatus === "FOLLOWING"? () => handleFollowClick("unfollow") : () => handleFollowClick("follow")} className={`h-10 ${user.followStatus === "FOLLOWING" ? 'bg-gray-500 hover:bg-red-600' : 'bg-violet-500 hover:bg-violet-600'} text-white px-3 py-1 rounded-lg`}>   {user.followStatus === "FOLLOWING" ? "Following" : user.followStatus === "REQUESTED" ? "Requested" : "Follow"} </button>
+        <div className='flex flex-col sm:flex-row gap-4'>
+          <button onClick={() => createConversationMutation.mutate({ recipientId: user.id })} className='h-10 sm:w-30 bg-violet-500 hover:bg-violet-600 text-white px-3 py-1 rounded-lg'>Message</button>
+          <button onClick={user.followStatus === "FOLLOWING"? () => handleFollowClick("unfollow") : () => handleFollowClick("follow")} className={`h-10 sm:w-30 ${user.followStatus === "FOLLOWING" ? 'bg-gray-500 hover:bg-red-600' : 'bg-violet-500 hover:bg-violet-600'} text-white px-3 py-1 rounded-lg`}>   {user.followStatus === "FOLLOWING" ? "Following" : user.followStatus === "REQUESTED" ? "Requested" : "Follow"} </button>
         </div>
         }
       </div>
 
       <p className="text-gray-400 px-8">{user.status ?? "No status available"}</p>
 
-      <div className="flex justify-between">
+      <div className="flex justify-between text-sm">
         <div>
             <span className='font-bold'>{user._count?.followers}</span> Followers
             <span className='font-bold ml-4'>{user._count?.following}</span> Following

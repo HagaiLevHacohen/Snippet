@@ -90,7 +90,7 @@ function Snippet({ item, queryKey, clickable, onClick }) {
         <Link to={`/profile/${item.user.username}`} onClick={(e) => e.stopPropagation()} className="text-white">
           {item.user.name}
         </Link>
-        <span className="text-gray-400 text-sm">@ {item.user.username}</span>
+        <span className="text-gray-400 text-sm">@{item.user.username}</span>
         <span className="text-gray-400 text-sm ml-auto">{format(item.createdAt)}</span>
       </div>
 

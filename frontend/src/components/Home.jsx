@@ -1,5 +1,6 @@
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
+import { motion } from "framer-motion";
 import DisplaySnippet from "./DisplaySnippet";
 import profile1 from "../assets/display/fake_profile_1.jpg";
 import profile2 from "../assets/display/fake_profile_2.jpg";
@@ -13,6 +14,18 @@ function Home() {
     return <Navigate to="/feed" />; // redirect if logged in
   }
 
+  const centerVariants = {
+    hidden: { opacity: 0, y: -150 }, // starts higher for more visible motion
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 1.5,   // slower entrance
+        ease: "easeOut", // smooth deceleration
+      },
+    },
+  };
+
 
   return (
     <div className="font-['Montserrat',sans-serif] min-h-screen flex flex-col sm:flex-col lg:flex-row text-white bg-linear-to-br from-slate-950 via-indigo-950 to-black">
@@ -24,7 +37,13 @@ function Home() {
       </div>
 
       {/* Center column */}
-      <div className="flex-1 flex flex-col justify-center items-center text-center px-10 space-y-6">
+      <motion.div
+        className="flex-1 flex flex-col justify-center items-center text-center px-10 space-y-6"
+        variants={centerVariants}
+        initial="hidden"
+        animate="visible"
+        style={{ willChange: "transform", transform: "translateZ(0)" }}
+      >
         <h1 className="text-5xl font-bold">Welcome to Snippet</h1>
         <h2 className="text-2xl text-purple-400 font-semibold">
           Share thoughts. Spark conversations.
@@ -42,7 +61,7 @@ function Home() {
         </Link>
 
         </div>
-      </div>
+      </motion.div>
 
       {/* Right column */}
       <div className=" hidden flex-1 md:flex lg:flex-col justify-center items-center text-center px-10 gap-5 lg:space-y-30">

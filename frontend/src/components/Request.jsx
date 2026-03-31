@@ -72,7 +72,7 @@ function Request({ sender, page }) {
             {sender.name}
           </span>
           <span className="text-sm text-gray-400">
-            @ {sender.username}
+            @{sender.username}
           </span>
         </div>
       </div>
