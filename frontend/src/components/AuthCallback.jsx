@@ -19,9 +19,17 @@ export default function AuthCallback() {
 
     if (!token) return;
 
-    login(token);
-    toast.success("Logged in successfully!");
-    navigate("/feed", { replace: true });
+    async function fetchUser() {
+      try {
+        await login(token);
+        toast.success("Logged in successfully!");
+        navigate("/feed", { replace: true });
+      } catch (err) {
+        console.error("[AuthCallback] Login failed:", err);
+        toast.error("Login failed. Please try again.");
+      }
+    }
+    fetchUser();
   }, [login, navigate]);
 
   return <p>Logging you in...</p>;
