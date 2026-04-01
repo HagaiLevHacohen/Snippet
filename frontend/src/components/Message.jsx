@@ -8,7 +8,7 @@ function Message({ message }) {
     const isOwnMessage = message.senderId === user.id;
     return (
         <div
-            className={`flex flex-col max-w-4/10 p-2 rounded-lg mb-2 wrap-break-word
+            className={`flex flex-col max-w-[80%] md:max-w-[40%] p-2 rounded-lg mb-2 break-all sm:wrap-break-word whitespace-pre-wrap 
             ${isOwnMessage ? 'bg-green-800 self-end' : 'bg-gray-700 self-start'}`}
         >
             <span>{message.content}</span>
