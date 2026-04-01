@@ -5,6 +5,8 @@ const bcrypt = require("bcryptjs");
 const passport = require("passport");
 const { prisma } = require("../lib/prisma");
 const jwt = require("jsonwebtoken");
+const crypto = require('crypto');
+const { OAuth2Client } = require('google-auth-library');
 const { sendSuccess, sendError } = require("../utils/response");
 
 
@@ -70,7 +72,7 @@ const validateUser = [
 ];
 
 
-const postSignup = async (req, res) => {
+const postSignup = async (req, res, next) => {
   try {
     const errors = validationResult(req);
 
@@ -124,6 +126,97 @@ const postLogin = (req, res, next) => {
   })(req, res, next);
 };
 
+
+const client = new OAuth2Client(
+  process.env.GOOGLE_CLIENT_ID,
+  process.env.GOOGLE_CLIENT_SECRET,
+  process.env.GOOGLE_REDIRECT_URI
+);
+
+const handleGoogleAuth = (req, res) => {
+  // Generate random state
+  const state = crypto.randomBytes(16).toString("hex");
+
+  // Save state in a cookie (or session)
+  res.cookie("oauth_state", state, { httpOnly: true, sameSite: "lax" });
+
+  const url = client.generateAuthUrl({
+    access_type: "offline",
+    scope: ["openid", "email", "profile"],
+    prompt: "consent",
+    state // send it to Google
+  });
+
+  res.redirect(url);
+};
+
+const handleGoogleCallback = async (req, res, next) => {
+  try {
+    const returnedState = req.query.state;
+    const savedState = req.cookies.oauth_state;
+    if (!returnedState || returnedState !== savedState) {
+      return res.status(403).send("Invalid state");
+    }
+    res.clearCookie("oauth_state");
+
+    const code = req.query.code;
+    // Exchange code for tokens
+    const { tokens } = await client.getToken(code);
+
+    // Verify ID token & get user info
+    const ticket = await client.verifyIdToken({
+      idToken: tokens.id_token,
+      audience: process.env.GOOGLE_CLIENT_ID
+    });
+
+    const payload = ticket.getPayload();
+    
+    if (!payload || !payload.sub) {
+      return sendError(res, "Invalid Google response", 400);
+    }
+
+    const userAuth = {
+      googleId: payload.sub,
+      email: payload.email,
+      name: payload.name,
+      picture: payload.picture
+    };
+
+    let user = await prisma.user.findUnique({
+      where: { googleId: userAuth.googleId },
+      select: { id: true, username: true, name: true, email: true }
+    });
+
+    if (!user) {
+      // Create new user if not exists
+      const generatedUsername = `${userAuth.name.toLowerCase().replace(/\s+/g, "")}${Math.floor(Math.random() * 10000)}`;
+      user = await prisma.user.create({
+        data: {
+          googleId: userAuth.googleId,
+          authProvider: "google",
+          username: generatedUsername,
+          name: userAuth.name,
+          email: userAuth.email,
+        },
+        select: { id: true, username: true, name: true, email: true } 
+      });
+    }
+
+    // Sign the JWT
+    const token = jwt.sign(
+      { userId: user.id },
+      process.env.SECRET,
+      { expiresIn: "1h" }
+    );
+    
+    res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}`);
+
+  } catch (err) {
+    next(err);
+  }
+};
+
+
 const getUser = async (req, res, next) => {
   try {
     const user = await prisma.user.findUnique({
@@ -162,4 +255,6 @@ module.exports = {
                     postSignup,
                     validateUser,
                     getUser,
+                    handleGoogleAuth,
+                    handleGoogleCallback
  };

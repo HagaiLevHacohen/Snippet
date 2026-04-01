@@ -9,6 +9,7 @@ const errorHandler = require("./errors/errorHandler");
 const cors = require('cors');
 const http = require("http");
 const initSocket = require("./sockets");
+const cookieParser = require("cookie-parser");
 
 
 // Import Routers
@@ -43,6 +44,7 @@ configurePassport(passport, prisma);
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
 app.use(passport.initialize());
 
 
