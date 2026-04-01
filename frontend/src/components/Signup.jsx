@@ -16,6 +16,10 @@ function Signup() {
 
   const [errors, setErrors] = useState({});
 
+  function startGoogleLogin() {
+    window.location.href = `${import.meta.env.VITE_API_URL}/auth/google`;
+  }
+
   const mutation = useMutation({
     mutationFn: signupRequest,
     onSuccess: () => {
@@ -149,6 +153,24 @@ function Signup() {
             {mutation.isLoading ? "Signing up..." : "Sign Up"}
           </button>
         </form>
+
+        {/* Google OAuth */}
+        <button
+          onClick={startGoogleLogin}
+          className="flex items-center justify-center gap-3 px-4 py-2 w-full mt-2
+                    bg-gray-900 text-white text-sm font-medium
+                    border border-gray-700 rounded-md
+                    hover:bg-gray-800
+                    transition"
+        >
+          <img
+            src="https://developers.google.com/identity/images/g-logo.png"
+            alt="Google"
+            className="w-5 h-5 bg-white rounded-full p-0.5"
+          />
+          Continue with Google
+        </button>
+
         <p className="mt-2 text-center">
           Already have an account?{" "}
           <Link to="/login" className="text-purple-500 hover:text-purple-400">
