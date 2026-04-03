@@ -3,6 +3,8 @@
 const { body, validationResult, matchedData } = require("express-validator");
 const { prisma } = require("../lib/prisma");
 const { sendSuccess, sendError } = require("../utils/response");
+const { getOrSetCache, deleteByPattern } = require("../utils/cache");
+const { client } = require("../lib/redis");
 
 
 
@@ -108,36 +110,39 @@ const getPost = async (req, res, next) => {
     if (isNaN(postId)) {
       return sendError(res, "Invalid post id", 400);
     }
-    let post = await prisma.post.findUnique({
-    where: { id: postId },
-    include: {
-        user: {
-        select: { id: true, username: true, name: true, avatarUrl: true },
-        },
-        comments: {
-          include: {
-              user: { select: { id: true, username: true, name: true, avatarUrl: true } },
-          },
-          orderBy: { createdAt: "desc" },
-        },
-        _count: {
-        select: { likes: true, comments: true },
-        },
-        likes: {
-          where: {
-            userId: req.userId,
-          },
-          select: {
-            userId: true,
-          },
-        },
-    },
-    });
 
+    const fetchPost = async () => { 
+      return await prisma.post.findUnique({
+        where: { id: postId },
+        include: {
+          user: {
+            select: { id: true, username: true, name: true, avatarUrl: true },
+          },
+          comments: {
+            include: {
+              user: { select: { id: true, username: true, name: true, avatarUrl: true } },
+            },
+            orderBy: { createdAt: "desc" },
+          },
+          _count: {
+            select: { comments: true },
+          },
+        },
+      });
+    }
+
+
+    let post = await getOrSetCache(`post:${postId}`, fetchPost, { ttl: 120 });
     if (!post) return sendError(res, "Post not found", 404);
 
-    // Add isLiked boolean & clean response
-    post = {...post, isLiked: post.likes.length > 0, likes: undefined};
+    // Fetch all likes for this post, but only ids
+    const [likeCount, isLiked] = await Promise.all([
+      prisma.like.count({ where: { postId } }),
+      prisma.like.findUnique({ where: { userId_postId: { userId: req.userId, postId } } })
+    ]);
+
+    post._count = { comments: post._count.comments, likes: likeCount };
+    post.isLiked = isLiked;
 
     sendSuccess(res, post, "Post retrieved successfully");
 
@@ -205,6 +210,11 @@ const deletePost = async (req, res, next) => {
 
     // Delete
     const deletedPost = await prisma.post.delete({ where: { id: postId } });
+
+    // Invalidate cache for this post
+    await client.del(`post:${postId}`);
+    await deleteByPattern(`user:${req.userId}:comments:page=*:limit=*`);
+    
     sendSuccess(res, deletedPost, "Post deleted successfully");
 
   } catch (err) {
@@ -248,6 +258,10 @@ const createComment = async (req, res, next) => {
     },
     })
 
+    // Invalidate cache for this post
+    await client.del(`post:${postId}`);
+    await deleteByPattern(`user:${req.userId}:comments:page=*:limit=*`);
+    
     sendSuccess(res, comment, "Comment created successfully", 201);
 
     } catch (err) {

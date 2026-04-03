@@ -3,6 +3,7 @@
 const { body, validationResult, matchedData } = require("express-validator");
 const { prisma } = require("../lib/prisma");
 const { sendSuccess, sendError } = require("../utils/response");
+const { getOrSetCache } = require("../utils/cache");
 
 
 const getUsers = async (req, res, next) => {
@@ -445,30 +446,35 @@ const getUserComments = async (req, res, next) => {
     const limit = Math.min(Number(req.query.limit) || 20, 100);
     const skip = (page - 1) * limit;
 
-    const where = { userId };
+    fetchUserComments = async () => {
+      const where = { userId };
 
-    const totalCount = await prisma.comment.count({ where });
-    const totalPages = Math.max(Math.ceil(totalCount / limit), 1);
+      const totalCount = await prisma.comment.count({ where });
+      const totalPages = Math.max(Math.ceil(totalCount / limit), 1);
 
-    const comments = await prisma.comment.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      skip,
-      take: limit,
-      include: {
-        user: {
-          select: { id: true, username: true, name: true, avatarUrl: true },
-        },
-        post: {
-          select: {
-            id: true,
-            user: {
-              select: { name: true },
+      const comments = await prisma.comment.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+        include: {
+          user: {
+            select: { id: true, username: true, name: true, avatarUrl: true },
+          },
+          post: {
+            select: {
+              id: true,
+              user: {
+                select: { name: true },
+              },
             },
           },
         },
-      },
-    });
+      });
+      return { comments, totalCount, totalPages };
+    }
+
+    const { comments, totalCount, totalPages } = await getOrSetCache(`user:${userId}:comments:page=${page}:limit=${limit}`, fetchUserComments, { ttl: 120 });
 
     sendSuccess(res, { comments, page, totalPages, totalCount }, "User comments retrieved successfully");
   } catch (err) {

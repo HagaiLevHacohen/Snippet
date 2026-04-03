@@ -10,6 +10,9 @@ const cors = require('cors');
 const http = require("http");
 const initSocket = require("./sockets");
 const cookieParser = require("cookie-parser");
+const { connectRedis } = require("./lib/redis");
+
+connectRedis();
 
 
 // Import Routers

@@ -3,6 +3,8 @@
 const { body, validationResult, matchedData } = require("express-validator");
 const { prisma } = require("../lib/prisma");
 const { sendSuccess, sendError } = require("../utils/response");
+const { getOrSetCache, deleteByPattern } = require("../utils/cache");
+const { client } = require("../lib/redis");
 
 
 const getComment = async (req, res, next) => {
@@ -96,6 +98,9 @@ const deleteComment = async (req, res, next) => {
 
     // Delete
     const deletedComment = await prisma.comment.delete({ where: { id: commentId } });
+    
+    // Invalidate cache
+    await deleteByPattern(`user:${comment.userId}:comments:page=*:limit=*`);
     return sendSuccess(res, deletedComment, "Comment deleted successfully");
 
   } catch (err) {

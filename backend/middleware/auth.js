@@ -6,7 +6,6 @@ const { sendError } = require("../utils/response");
 
 function verifyToken(req, res, next) {
   const authHeader = req.headers["authorization"];
-  console.log('[verifyToken] Authorization header:', authHeader);
   if (!authHeader) return sendError(res, "Missing token", 401);
 
   const token = authHeader.split(" ")[1];
