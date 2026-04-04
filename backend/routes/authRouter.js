@@ -2,8 +2,10 @@
 const { Router } = require("express");
 const { postLogin, postSignup, validateUser, getUser, handleGoogleAuth, handleGoogleCallback} = require('../controllers/authController');
 const {verifyToken} = require('../middleware/auth');
+const { authRateLimit } = require('../middleware/limiters');
 
 const authRouter = Router();
+authRouter.use(authRateLimit);
 
 // Routes: /auth
 authRouter.post("/signup", validateUser, postSignup);

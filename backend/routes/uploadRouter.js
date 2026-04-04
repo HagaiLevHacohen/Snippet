@@ -2,11 +2,15 @@
 const { Router } = require("express");
 const { verifyToken } = require("../middleware/auth");
 const { uploadFile } = require("../controllers/uploadController");
+const { combinedRateLimit } = require('../middleware/limiters');
 
-const router = Router();
+const uploadRouter = Router();
+
+uploadRouter.use(verifyToken);
+uploadRouter.use(combinedRateLimit);
 
 // Routes: /upload
-router.post("/avatar", verifyToken, uploadFile);
-router.post("/post-image", verifyToken, uploadFile);
+uploadRouter.post("/avatar", uploadFile);
+uploadRouter.post("/post-image", uploadFile);
 
-module.exports = router;
+module.exports = uploadRouter;

@@ -2,19 +2,24 @@
 const { Router } = require("express");
 const {getUsers, getUserByUsername, getUserById,  getFollowRequests, getFollowers, getFollowing, getUserLikes, updateUser, getUserComments, validateUserUpdate} = require('../controllers/usersController');
 const {verifyToken} = require('../middleware/auth');
+const { combinedRateLimit } = require('../middleware/limiters');
 
 const usersRouter = Router();
 
+usersRouter.use(verifyToken);
+usersRouter.use(combinedRateLimit);
+
+
 // Routes: /users
-usersRouter.get("/", verifyToken, getUsers);
-usersRouter.get("/username/:username", verifyToken, getUserByUsername);
-usersRouter.get("/follow-requests", verifyToken, getFollowRequests);
-usersRouter.get("/:id/followers", verifyToken, getFollowers);
-usersRouter.get("/:id/following", verifyToken, getFollowing);
-usersRouter.get("/:id/likes", verifyToken, getUserLikes);
-usersRouter.get("/:id/comments", verifyToken, getUserComments);
-usersRouter.get("/:id", verifyToken, getUserById);
-usersRouter.put("/:id", verifyToken, validateUserUpdate, updateUser);
+usersRouter.get("/", getUsers);
+usersRouter.get("/username/:username", getUserByUsername);
+usersRouter.get("/follow-requests", getFollowRequests);
+usersRouter.get("/:id/followers", getFollowers);
+usersRouter.get("/:id/following", getFollowing);
+usersRouter.get("/:id/likes", getUserLikes);
+usersRouter.get("/:id/comments", getUserComments);
+usersRouter.get("/:id", getUserById);
+usersRouter.put("/:id", validateUserUpdate, updateUser);
 
 
 
