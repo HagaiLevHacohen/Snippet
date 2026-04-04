@@ -82,11 +82,11 @@ const createConversationMutation = useMutation({
             </div>
         </div>
         {isOwnProfile ? 
-        <Link to="/settings" className='h-10 text-sm sm:text-lg sm:w-30 bg-violet-500 hover:bg-violet-600 text-white sm:p-2 text-center rounded-lg'>Edit Profile</Link>
+        <Link to="/settings" className='h-10 text-sm sm:text-lg sm:w-30 bg-violet-500 hover:bg-violet-600 text-white flex justify-center items-center rounded-lg'>Edit Profile</Link>
         :
         <div className='flex flex-col sm:flex-row gap-4'>
-          <button onClick={() => createConversationMutation.mutate({ recipientId: user.id })} className='h-10 text-sm sm:text-lg sm:w-30 bg-violet-500 hover:bg-violet-600 text-white sm:px-3 sm:py-1 rounded-lg'>Message</button>
-          <button onClick={user.followStatus === "FOLLOWING"? () => handleFollowClick("unfollow") : () => handleFollowClick("follow")} className={`h-10 text-sm sm:text-lg sm:w-30 ${user.followStatus === "FOLLOWING" ? 'bg-gray-500 hover:bg-red-600' : 'bg-violet-500 hover:bg-violet-600'} text-white sm:px-3 sm:py-1 rounded-lg`}>   {user.followStatus === "FOLLOWING" ? "Following" : user.followStatus === "REQUESTED" ? "Requested" : "Follow"} </button>
+          <button onClick={() => createConversationMutation.mutate({ recipientId: user.id })} className='h-10 text-sm sm:text-lg sm:w-30 bg-violet-500 hover:bg-violet-600 text-white flex justify-center items-center rounded-lg'>Message</button>
+          <button onClick={user.followStatus === "FOLLOWING"? () => handleFollowClick("unfollow") : () => handleFollowClick("follow")} className={`h-10 text-sm sm:text-lg sm:w-30 ${user.followStatus === "FOLLOWING" ? 'bg-gray-500 hover:bg-red-600' : 'bg-violet-500 hover:bg-violet-600'} text-white flex justify-center items-center rounded-lg`}>   {user.followStatus === "FOLLOWING" ? "Following" : user.followStatus === "REQUESTED" ? "Requested" : "Follow"} </button>
         </div>
         }
       </div>
