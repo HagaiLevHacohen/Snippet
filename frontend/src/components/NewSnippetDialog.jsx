@@ -77,7 +77,7 @@ export default function NewSnippetDialog({ onClose }) {
         <h2 className="text-2xl font-bold text-white mb-4">New Snippet</h2>
         {imagePreview && (
           <div className="mb-4">
-            <img src={imagePreview} alt="Preview" className="w-full rounded-lg" />
+            <img src={imagePreview} alt="Preview" className="w-full rounded-lg max-h-125 object-cover" />
           </div>
         )}
 
