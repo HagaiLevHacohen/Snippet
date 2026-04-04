@@ -35,7 +35,7 @@ async function rateLimit(key, points, duration) {
 
 // Auth routes (login/signup)
 const authRateLimit = async (req, res, next) => {
-  const allowed = await rateLimit(`rate:ip:${req.ip}`, 5, 60);
+  const allowed = await rateLimit(`rate:auth:${req.ip}`, 5, 60);
   if (!allowed) {
     return res.status(429).json({ error: "Too many requests" });
   }
