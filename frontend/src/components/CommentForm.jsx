@@ -52,7 +52,7 @@ function CommentForm({ postId }) {
   };
 
   const handleCancel = (e) => {
-    e.stopPropagation();
+    if (e) e.stopPropagation();
     setIsActive(false);
     setCommentContent("");
     setErrors({});

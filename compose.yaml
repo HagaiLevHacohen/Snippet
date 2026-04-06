@@ -1,0 +1,61 @@
+
+services:
+  # Backend service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: snippet-backend
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./backend:/app
+      - backend-node-modules:/app/node_modules # Mount node_modules as a volume to persist installed dependencies
+    command: sh -c "npx prisma migrate deploy && npm run dev" # Apply database migrations and start the server
+
+  # Frontend service
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: snippet-frontend
+    ports:
+      - "5173:5173"
+    env_file:
+      - .env
+    volumes:
+      - ./frontend:/app
+      - frontend-node-modules:/app/node_modules # Mount node_modules as a volume to persist installed dependencies
+    command: npm run dev -- --host
+    depends_on:
+      - backend
+
+  # Postgres database
+  db:
+    image: postgres:15-alpine
+    container_name: snippet-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: snippet_db
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  # Redis cache
+  redis:
+    image: redis:7-alpine
+    container_name: snippet-redis
+    volumes:
+      - redis-data:/data
+
+# Named volumes for persistence
+volumes:
+  db-data:
+  redis-data:
+  backend-node-modules:
+  frontend-node-modules:

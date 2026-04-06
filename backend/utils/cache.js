@@ -29,14 +29,19 @@ const getOrSetCache = async (key, fetchFn, options = {}) => {
 
 const deleteByPattern = async (pattern) => {
   const keys = [];
+
   for await (const key of client.scanIterator({ MATCH: pattern })) {
-    keys.push(key);
+    const k = Array.isArray(key) ? key[0] : key;
+    if (typeof k === "string" && k) keys.push(k);
   }
 
-  if (keys.length) {
-    console.log(`Deleting ${keys.length} keys matching pattern: ${pattern}`);
-    await client.del(keys);
+  if (!keys.length) {
+    console.log(`No valid keys found for pattern: ${pattern}`);
+    return;
   }
+
+  console.log(`Deleting ${keys.length} keys:`, keys);
+  await client.del(keys);
 };
 
 module.exports = {

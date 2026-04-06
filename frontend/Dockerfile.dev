@@ -1,0 +1,14 @@
+# Use lightweight Node
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install deps first (better caching)
+COPY package*.json ./
+RUN npm install
+
+# Vite dev server port
+EXPOSE 5173
+
+# IMPORTANT: allow external access
+CMD ["npm", "run", "dev", "--", "--host"]
