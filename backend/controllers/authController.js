@@ -6,6 +6,7 @@ const passport = require("passport");
 const { prisma } = require("../lib/prisma");
 const jwt = require("jsonwebtoken");
 const crypto = require('crypto');
+const { verifyToken, generateAccessToken, generateRefreshToken, hashToken} = require("../utils/tokens");
 const { OAuth2Client } = require('google-auth-library');
 const { sendSuccess, sendError } = require("../utils/response");
 
@@ -101,29 +102,123 @@ const postSignup = async (req, res, next) => {
 };
 
 const postLogin = (req, res, next) => {
-  passport.authenticate("local", { session: false }, (err, user, info) => {
-    if (err) return next(err); // unexpected errors go to global handler
-
-    if (!user) {
-      return sendError(res, "Invalid credentials", 401);
-    }
+  passport.authenticate("local", { session: false }, async (err, user) => {
+    if (err) return next(err);
+    if (!user) return sendError(res, "Invalid credentials", 401);
 
     try {
-      // Sign the JWT
-      const token = jwt.sign(
-        { userId: user.id },
-        process.env.SECRET,
-        { expiresIn: "1h" }
-      );
+      const accessToken = generateAccessToken(user.id);
 
-      // Return token in standardized format
-      return sendSuccess(res, token, "Login successful");
+      const refreshToken = generateRefreshToken();
+      const tokenHash = hashToken(refreshToken);
 
-    } catch (jwtErr) {
-      // Any JWT signing error
-      return next(jwtErr);
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7);
+
+      await prisma.refreshToken.create({
+        data: {
+          tokenHash,
+          userId: user.id,
+          expiresAt
+        }
+      });
+
+      // Send refresh token as HTTP-only cookie
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/auth/refresh"
+      });
+
+      return sendSuccess(res, accessToken, "Login successful");
+
+    } catch (err) {
+      next(err);
     }
   })(req, res, next);
+};
+
+
+const refreshTokenHandler = async (req, res, next) => {
+  try {
+    const token = req.cookies.refreshToken;
+    if (!token) return sendError(res, "No refresh token", 401);
+
+    const tokenHash = hashToken(token);
+
+    const dbToken = await prisma.refreshToken.findUnique({
+      where: { tokenHash },
+      include: { user: true }
+    });
+
+    if (!dbToken || dbToken.revoked || dbToken.expiresAt < new Date()) {
+      return sendError(res, "Invalid refresh token", 403);
+    }
+
+    //  Rotate token
+    const newRefreshToken = generateRefreshToken();
+    const newHash = hashToken(newRefreshToken);
+
+    await prisma.refreshToken.update({
+      where: { id: dbToken.id },
+      data: { revoked: true, replacedByToken: newHash }
+    });
+
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
+
+    await prisma.refreshToken.create({
+      data: { tokenHash: newHash, userId: dbToken.userId, expiresAt }
+    });
+
+    const newAccessToken = generateAccessToken(dbToken.userId);
+
+    res.cookie("refreshToken", newRefreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/auth/refresh"
+    });
+
+    return sendSuccess(res, newAccessToken, "Token refreshed");
+
+  } catch (err) {
+    next(err);
+  }
+};
+
+
+const logout = async (req, res, next) => {
+  try {
+    const token = req.cookies.refreshToken;
+    if (!token) {
+      // Nothing to revoke, just return success
+      return sendSuccess(res, null, "Logged out");
+    }
+
+    const tokenHash = hashToken(token);
+
+    // Find the token in DB
+    const dbToken = await prisma.refreshToken.findUnique({
+      where: { tokenHash }
+    });
+
+    if (dbToken) {
+      await prisma.refreshToken.update({
+        where: { id: dbToken.id },
+        data: { revoked: true }
+      });
+    }
+
+    // Clear the cookie
+    res.clearCookie("refreshToken", { path: "/auth/refresh", httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax" });
+
+    return sendSuccess(res, null, "Logged out successfully");
+
+  } catch (err) {
+    next(err);
+  }
 };
 
 
@@ -170,7 +265,6 @@ const handleGoogleCallback = async (req, res, next) => {
     });
 
     const payload = ticket.getPayload();
-    
     if (!payload || !payload.sub) {
       return sendError(res, "Invalid Google response", 400);
     }
@@ -182,6 +276,7 @@ const handleGoogleCallback = async (req, res, next) => {
       picture: payload.picture
     };
 
+    // Check if user exists
     let user = await prisma.user.findUnique({
       where: { googleId: userAuth.googleId },
       select: { id: true, username: true, name: true, email: true }
@@ -202,20 +297,40 @@ const handleGoogleCallback = async (req, res, next) => {
       });
     }
 
-    // Sign the JWT
-    const token = jwt.sign(
-      { userId: user.id },
-      process.env.SECRET,
-      { expiresIn: "1h" }
-    );
-    
-    res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}`);
+    // Generate access token
+    const accessToken = generateAccessToken(user.id);
+
+    // Generate refresh token
+    const refreshToken = generateRefreshToken();
+    const tokenHash = hashToken(refreshToken);
+
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
+
+    // Store refresh token in DB
+    await prisma.refreshToken.create({
+      data: {
+        tokenHash,
+        userId: user.id,
+        expiresAt
+      }
+    });
+
+    // Set refresh token cookie
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/auth/refresh"
+    });
+
+    // Redirect with access token
+    res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${accessToken}`);
 
   } catch (err) {
     next(err);
   }
 };
-
 
 const getUser = async (req, res, next) => {
   try {
@@ -254,6 +369,8 @@ module.exports = {
                     postLogin,
                     postSignup,
                     validateUser,
+                    refreshTokenHandler,
+                    logout,
                     getUser,
                     handleGoogleAuth,
                     handleGoogleCallback

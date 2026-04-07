@@ -44,7 +44,10 @@ configurePassport(passport, prisma);
 
 
 // ----- Express middleware -----
-app.use(cors());
+app.use(cors({
+  origin: process.env.FRONTEND_URL, // your frontend
+  credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());

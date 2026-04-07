@@ -13,6 +13,21 @@ datasource db {
   provider = "postgresql"
 }
 
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  tokenHash String   @unique
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  revoked   Boolean  @default(false)
+  replacedByToken String?
+
+  @@index([userId])
+}
+
 model User {
   id             Int      @id @default(autoincrement())
   username       String   @unique
@@ -20,6 +35,7 @@ model User {
   googleId       String?  @unique
   authProvider   String   @default("local")
   name           String
+  refreshTokens RefreshToken[]
   status         String?
   passwordHashed String?
   createdAt      DateTime @default(now())
