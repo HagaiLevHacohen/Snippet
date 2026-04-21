@@ -2,6 +2,7 @@ import { useState } from "react";
 import FormInput from "./FormInput";
 import { Link } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { signupRequest } from "../api/auth";
 
@@ -14,6 +15,8 @@ function Signup() {
     confirm_password: "",
   });
 
+  const navigate = useNavigate();
+
   const [errors, setErrors] = useState({});
 
   function startGoogleLogin() {
@@ -22,10 +25,9 @@ function Signup() {
 
   const mutation = useMutation({
     mutationFn: signupRequest,
-    onSuccess: () => {
-      toast.success("Signup successful!");
-      setForm({ username: "", email: "", name: "", password: "", confirm_password: "" });
-      setErrors({});
+    onSuccess: (data, variables) => {
+      toast.success("Signup successful! Check your email.");
+      navigate("/verify-email", { state: { email: variables.email } });
     },
     onError: (err) => {
       if (err?.errors) {

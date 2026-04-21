@@ -6,18 +6,18 @@ function generateAccessToken(userId) {
   return jwt.sign({ userId }, process.env.SECRET, { expiresIn: "1h" });
 }
 
-// Refresh token (raw)
-function generateRefreshToken() {
+// Generate token (raw)
+function generateToken() {
   return crypto.randomBytes(40).toString("hex");
 }
 
-// Hash refresh token with SHA256
+// Hash token with SHA256
 function hashToken(token) {
   return crypto.createHash("sha256").update(token).digest("hex");
 }
 
 module.exports = {
   generateAccessToken,
-  generateRefreshToken,
+  generateToken,
   hashToken
 };

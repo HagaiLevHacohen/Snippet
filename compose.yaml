@@ -8,6 +8,7 @@ services:
     container_name: snippet-backend
     ports:
       - "3000:3000"
+      - "5555:5555"
     env_file:
       - .env
     depends_on:
@@ -59,3 +60,10 @@ volumes:
   redis-data:
   backend-node-modules:
   frontend-node-modules:
+
+
+# To access Prisma Studio for the backend, run the following command in your terminal:
+# docker exec -it snippet-backend npx prisma studio --port 5555 --browser none
+
+# To reset the database, you can run:
+# docker exec -it snippet-backend npx prisma migrate reset

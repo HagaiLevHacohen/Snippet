@@ -22,3 +22,12 @@ export function signupRequest(formData) {
     body: JSON.stringify(formData),
   });
 }
+
+export function resendVerificationRequest({ email }) {
+  return apiClient("/auth/resend-verification", {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+}

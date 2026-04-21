@@ -12,12 +12,17 @@ import FollowRequestsPage from "./components/FollowRequestsPage.jsx";
 import Settings from "./components/Settings.jsx";
 import MessagePage from "./components/MessagePage.jsx";
 import AuthCallback from "./components/AuthCallback.jsx";
+import VerifyEmail from "./components/VerifyEmail.jsx";
+import EmailVerified from "./components/EmailVerified.jsx";
+
 
 const routes = [
   { path: "/", element: <Home /> },
   { path: "/login", element: <Login /> },
   { path: "/signup", element: <Signup /> },
   { path: "/auth/callback", element: <AuthCallback /> },
+  { path: "/verify-email", element: <VerifyEmail /> },
+  { path: "/email-verified", element: <EmailVerified /> },
 
   {
     element: (

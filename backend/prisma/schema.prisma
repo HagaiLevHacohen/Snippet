@@ -28,6 +28,21 @@ model RefreshToken {
   @@index([userId])
 }
 
+
+model VerificationToken {
+  id        Int      @id @default(autoincrement())
+  tokenHash String   @unique
+  
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+
 model User {
   id             Int      @id @default(autoincrement())
   username       String   @unique
@@ -35,12 +50,15 @@ model User {
   googleId       String?  @unique
   authProvider   String   @default("local")
   name           String
-  refreshTokens RefreshToken[]
+  emailVerified  Boolean  @default(false)
   status         String?
   passwordHashed String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   avatarUrl      String?
+
+  refreshTokens  RefreshToken[]
+  verificationTokens VerificationToken[]
 
   following UserFollow[] @relation("Following")
   followers UserFollow[] @relation("Followers")

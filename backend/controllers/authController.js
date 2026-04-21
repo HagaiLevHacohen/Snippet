@@ -6,10 +6,10 @@ const passport = require("passport");
 const { prisma } = require("../lib/prisma");
 const jwt = require("jsonwebtoken");
 const crypto = require('crypto');
-const { verifyToken, generateAccessToken, generateRefreshToken, hashToken} = require("../utils/tokens");
+const { generateAccessToken, generateToken, hashToken} = require("../utils/tokens");
 const { OAuth2Client } = require('google-auth-library');
 const { sendSuccess, sendError } = require("../utils/response");
-
+const { sendVerificationEmail } = require("../utils/emails");
 
 
 
@@ -84,6 +84,7 @@ const postSignup = async (req, res, next) => {
     const { username, email, name, password } = matchedData(req);
     const passwordHashed = await bcrypt.hash(password, 10);
 
+    // Create user in DB
     const user = await prisma.user.create({
       data: {
         username,
@@ -93,6 +94,25 @@ const postSignup = async (req, res, next) => {
       },
       select: { id: true, username: true, name: true, email: true } 
     });
+
+
+    // Generate verification token
+    const verificationToken = generateToken();
+    const tokenHash = hashToken(verificationToken);
+
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 1); // 1h expiry
+
+    await prisma.verificationToken.create({
+      data: {
+        tokenHash,
+        userId: user.id,
+        expiresAt
+      }
+    });
+
+    // Send verification email
+    await sendVerificationEmail(user, verificationToken);
 
     sendSuccess(res, user, "Signup successful", 201);
 
@@ -105,11 +125,14 @@ const postLogin = (req, res, next) => {
   passport.authenticate("local", { session: false }, async (err, user) => {
     if (err) return next(err);
     if (!user) return sendError(res, "Invalid credentials", 401);
+    if (!user.emailVerified) {
+      return sendError(res, "Please verify your email first", 403);
+    }
 
     try {
       const accessToken = generateAccessToken(user.id);
 
-      const refreshToken = generateRefreshToken();
+      const refreshToken = generateToken();
       const tokenHash = hashToken(refreshToken);
 
       const expiresAt = new Date();
@@ -157,7 +180,7 @@ const refreshTokenHandler = async (req, res, next) => {
     }
 
     //  Rotate token
-    const newRefreshToken = generateRefreshToken();
+    const newRefreshToken = generateToken();
     const newHash = hashToken(newRefreshToken);
 
     await prisma.refreshToken.update({
@@ -225,7 +248,7 @@ const logout = async (req, res, next) => {
 const client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
-  process.env.GOOGLE_REDIRECT_URI
+  `${process.env.BACKEND_URL}/auth/google/callback`
 );
 
 const handleGoogleAuth = (req, res) => {
@@ -292,6 +315,7 @@ const handleGoogleCallback = async (req, res, next) => {
           username: generatedUsername,
           name: userAuth.name,
           email: userAuth.email,
+          emailVerified: true,
         },
         select: { id: true, username: true, name: true, email: true } 
       });
@@ -301,7 +325,7 @@ const handleGoogleCallback = async (req, res, next) => {
     const accessToken = generateAccessToken(user.id);
 
     // Generate refresh token
-    const refreshToken = generateRefreshToken();
+    const refreshToken = generateToken();
     const tokenHash = hashToken(refreshToken);
 
     const expiresAt = new Date();
@@ -331,6 +355,84 @@ const handleGoogleCallback = async (req, res, next) => {
     next(err);
   }
 };
+
+
+const verifyEmail = async (req, res, next) => {
+  try {
+    const { token } = req.query;
+    if (!token) return sendError(res, "Invalid token", 400);
+
+    const tokenHash = hashToken(token);
+
+    await prisma.$transaction(async (tx) => {
+      const dbToken = await tx.verificationToken.findUnique({
+        where: { tokenHash }
+      });
+
+      if (!dbToken || dbToken.expiresAt < new Date()) {
+        throw new Error("Invalid or expired token");
+      }
+
+      await tx.user.update({
+        where: { id: dbToken.userId },
+        data: { emailVerified: true }
+      });
+
+      await tx.verificationToken.delete({
+        where: { id: dbToken.id }
+      });
+    });
+
+    // redirect to frontend success page
+    return res.redirect(`${process.env.FRONTEND_URL}/email-verified`);
+
+  } catch (err) {
+    next(err);
+  }
+};
+
+
+const resendVerification = async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email: req.body.email }
+    });
+
+    if (!user) return sendError(res, "User not found", 404);
+
+    if (user.emailVerified) {
+      return sendError(res, "Email already verified", 400);
+    }
+
+    // delete old tokens (optional but cleaner)
+    await prisma.verificationToken.deleteMany({
+      where: { userId: user.id }
+    });
+
+    const verificationToken = generateToken();
+    const tokenHash = hashToken(verificationToken);
+
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 24);
+
+    await prisma.verificationToken.create({
+      data: {
+        tokenHash,
+        userId: user.id,
+        expiresAt
+      }
+    });
+
+    // send email again
+    await sendVerificationEmail(user, verificationToken);
+    return sendSuccess(res, null, "Verification email resent");
+    
+  } catch (err) {
+    console.error("Error in resendVerification:", err);
+    return sendError(res, "Failed to resend verification email", 500);
+  }
+};
+
 
 const getUser = async (req, res, next) => {
   try {
@@ -371,6 +473,8 @@ module.exports = {
                     validateUser,
                     refreshTokenHandler,
                     logout,
+                    verifyEmail,
+                    resendVerification,
                     getUser,
                     handleGoogleAuth,
                     handleGoogleCallback
