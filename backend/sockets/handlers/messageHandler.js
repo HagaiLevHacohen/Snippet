@@ -27,7 +27,10 @@ function registerMessageHandler(io, socket) {
         return socket.emit("error", "Unauthorized");
       }
 
-      // 1. Save to DB
+      // 1. Emit to room
+      io.to(`conversation:${conversationId}`).emit("new_message", message);
+
+      // 2. Save to DB
       const message = await prisma.$transaction(async (tx) => {
         const createdMessage = await tx.message.create({
           data: {
@@ -45,9 +48,6 @@ function registerMessageHandler(io, socket) {
 
         return createdMessage; // ✅ return it
       });
-
-      // 2. Emit to room
-      io.to(`conversation:${conversationId}`).emit("new_message", message);
     } catch (err) {
       console.error(err);
       socket.emit("error", "Failed to send message");
