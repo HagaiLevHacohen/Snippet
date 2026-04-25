@@ -14,7 +14,7 @@ export default function MessageList({ messages, observerRef, isFetchingNextPage,
       </div>
 
       {messages.map((message) => (
-        <Message key={message.id} message={message} />
+        <Message key={message.clientId} message={message} />
       ))}
 
       {isTyping && (

@@ -1,5 +1,5 @@
 const { prisma } = require("../../lib/prisma");
-
+const { v4: uuidv4 } = require("uuid");
 
 function registerMessageHandler(io, socket) {
   socket.on("send_message", async (data) => {
@@ -7,12 +7,10 @@ function registerMessageHandler(io, socket) {
       const userId = socket.userId;
       const { conversationId, content, imageUrl } = data;
       
-      // Basic validation
       if (!conversationId || (!content && !imageUrl)) {
         return socket.emit("error", "Invalid message");
       }
 
-      // Check if user is part of the conversation
       const conversation = await prisma.conversation.findFirst({
         where: {
           id: conversationId,
@@ -27,27 +25,39 @@ function registerMessageHandler(io, socket) {
         return socket.emit("error", "Unauthorized");
       }
 
-      // 1. Emit to room
-      io.to(`conversation:${conversationId}`).emit("new_message", message);
+      const clientId = uuidv4();
 
-      // 2. Save to DB
-      const message = await prisma.$transaction(async (tx) => {
-        const createdMessage = await tx.message.create({
+      const optimisticMessage = {
+        clientId,
+        conversationId,
+        senderId: userId,
+        content,
+        imageUrl,
+        createdAt: new Date(),
+        isRead: false
+      };
+
+      io.to(`conversation:${conversationId}`).emit("new_message", optimisticMessage);
+
+      await prisma.$transaction(async (tx) => {
+        const message = await tx.message.create({
           data: {
-            conversationId,
-            senderId: userId,
+            clientId,
             content,
             imageUrl,
-          },
+            senderId: userId,
+            conversationId
+          }
         });
 
         await tx.conversation.update({
           where: { id: conversationId },
-          data: { updatedAt: new Date(), lastMessageId: createdMessage.id },
+          data: {
+            lastMessageId: message.id
+          }
         });
-
-        return createdMessage; // ✅ return it
       });
+
     } catch (err) {
       console.error(err);
       socket.emit("error", "Failed to send message");

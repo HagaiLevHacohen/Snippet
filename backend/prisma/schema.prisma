@@ -163,6 +163,8 @@ model Conversation {
 
 model Message {
   id        Int      @id @default(autoincrement())
+  clientId  String   @unique
+  
   content   String
   createdAt DateTime @default(now())
 
