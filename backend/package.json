@@ -4,9 +4,16 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jest --setupFiles dotenv/config",
     "start": "node app.js",
-    "dev": "nodemon app.js"
+    "dev": "nodemon app.js",
+    
+    "db:migrate": "prisma migrate deploy",
+    "db:reset": "prisma migrate reset --force",
+    "db:studio": "prisma studio",
+
+    "db:reset:test": "NODE_ENV=test prisma migrate reset --force",
+    "db:migrate:test": "NODE_ENV=test prisma migrate deploy",
+    "test": "npm run db:reset:test && jest"
   },
   "repository": {
     "type": "git",
@@ -43,7 +50,7 @@
     "socket.io": "^4.8.3"
   },
   "devDependencies": {
-    "dotenv": "^17.3.1",
+    "dotenv": "^17.4.2",
     "jest": "^30.3.0",
     "nodemon": "^3.1.14",
     "prisma": "^7.2.0",

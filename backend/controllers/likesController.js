@@ -23,6 +23,9 @@ const postLike = async (req, res, next) => {
     sendSuccess(res, like, "Post liked successfully", 201);
 
     } catch (err) {
+        if (err.code === "P2002") {
+          return sendError(res, "Post already liked", 400);
+        }
         next(err);
     }
 };

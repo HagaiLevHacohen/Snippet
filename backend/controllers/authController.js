@@ -151,7 +151,7 @@ const postLogin = (req, res, next) => {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
-        path: "/auth/refresh"
+        path: "/auth"
       });
 
       return sendSuccess(res, accessToken, "Login successful");
@@ -201,7 +201,7 @@ const refreshTokenHandler = async (req, res, next) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      path: "/auth/refresh"
+      path: "/auth"
     });
 
     return sendSuccess(res, newAccessToken, "Token refreshed");
@@ -235,7 +235,7 @@ const logout = async (req, res, next) => {
     }
 
     // Clear the cookie
-    res.clearCookie("refreshToken", { path: "/auth/refresh", httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax" });
+    res.clearCookie("refreshToken", { path: "/auth", httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax" });
 
     return sendSuccess(res, null, "Logged out successfully");
 
@@ -345,7 +345,7 @@ const handleGoogleCallback = async (req, res, next) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      path: "/auth/refresh"
+      path: "/auth"
     });
 
     // Redirect with access token

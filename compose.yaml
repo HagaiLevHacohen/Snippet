@@ -12,8 +12,10 @@ services:
     env_file:
       - .env
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     volumes:
       - ./backend:/app
       - backend-node-modules:/app/node_modules # Mount node_modules as a volume to persist installed dependencies
@@ -46,6 +48,11 @@ services:
       POSTGRES_DB: snippet_db
     volumes:
       - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d snippet_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   # Redis cache
   redis:
@@ -53,6 +60,11 @@ services:
     container_name: snippet-redis
     volumes:
       - redis-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 # Named volumes for persistence
 volumes:
@@ -67,3 +79,9 @@ volumes:
 
 # To reset the database, you can run:
 # docker exec -it snippet-backend npx prisma migrate reset
+
+# To build and start the containers, use the following command:
+# docker compose up --build --no-cache
+
+# To stop and remove the containers, networks, and volumes, use the following command (also removes database data):
+# docker compose down -v

@@ -75,7 +75,7 @@ export function AuthProvider({ children }) {
       console.error("Logout failed:", err);
     }
     setToken(null);
-    queryClient.removeQueries(["auth"]);
+    queryClient.clear();
   };
 
   return (

@@ -1,0 +1,39 @@
+services:
+  db:
+    image: postgres:15-alpine
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: snippet_db
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  db-data:
+  redis-data:
+
+
+# To create the test database, you can run the following command after the db service is up and running:
+# docker exec -it snippet-db-1 psql -U postgres -c "CREATE DATABASE snippet_test_db;"
+
+# To access the Redis CLI, you can run the following command:
+# docker exec -it snippet-redis-1 redis-cli
